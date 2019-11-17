@@ -31,19 +31,34 @@
     import axios from 'axios';
 
     export default {
-        props: ['filename', 'tokenizer', 'kuroshiro', 'lookupsDict'],
+        props: {
+            filename: {
+                default: '',
+                type: String
+            },
+            tokenizer: {
+                default: null,
+                type: Object
+            },
+            kuroshiro: {
+                default: null,
+                type: Object
+            },
+            lookupsDict: {
+                default: null,
+                type: Object
+            }
+        },
 
         data() {
             return {
                 endpoint: 'http://localhost:3000/api/audio/',
                 audio: {audioEnglish: "His house is very big.", audioKana: "かれ の いえ は とても ひろい", audioKanji: "彼の家はとても広い", createdAt: "2019-08-03T14:00:04.000Z", filename: "e21548c3fc117238b1594acfecf28fb4.mp3", id: 75, updatedAt: "2019-08-03T14:00:04.000Z"},
                 computedFilepath: 'http://localhost:3000/api/audio/e21548c3fc117238b1594acfecf28fb4.mp3',
-                audioComponentCounter: 0,
-                furiganaAudio: "",
-                furiganaCounter: 10,
-                tokenList: [],
-                isInputShown: true,
-                guess: ""
+                audioComponentCounter: 0,   // Used to refresh the furigana-component in order to refresh the audio file
+                tokenList: [],  // Array containing transcription of current audio file, with furigana and links to corresponding entries. Passed to furigana-component
+                isInputShown: true, // Used to flip between question and answer
+                guess: ""   // The user's latest guess
             }
         },
 
@@ -60,56 +75,18 @@
 
 
         watch: {
-            /* First step to processing the audioKanji transcription.
-             *
-             * Currently done in two steps due to the asynchronous nature of the process
-             */
-            audio: function () {
-                let tokenList = [];
-                let tokens = this.tokenizer.tokenize(this.audio.audioKanji);    // Breaks the transcription up into an array of words
-                let msg = ""
-                let count = 0;
-                for (let i = 0; i < tokens.length; i++) {
-                    if (this.lookupsDict.hasOwnProperty(tokens[i]['basic_form']))
-                        console.log("got it")
-                    /* This API call returns the following response for each of the word tokens:
-                     *      id: ID of the word
-                     *      ent_seq: ent_seq of the word
-                     *      k_ele: k_ele of the word
-                     *      word_type: word type (noun, verb, etc.)
-                     *      createdAt: Arbitrary value
-                     *      updatedAt:Arbitrary value
-                     */
-                    axios.get('http://localhost:3000/api/lookups/?k_ele=' + tokens[i]['basic_form'])
-                        .then(response => {
-                            let kanji = tokens[i]['surface_form'];  // The 'basic_form' option passed here signifies the dictionary form of the given word
-                            let tokenId = (response.data.id) ? response.data.id : '';   // Assign ID if match is found in the Lookup database
-                            this.$emit('updateLookups', { kanji: tokenId } );
-                            let newToken = { furigana: kanji, index: i, id: tokenId };  // index is assigned here to keep the word order of the transcription
-                            tokenList.push(newToken);
-                            count += 1;
-                            if (count == tokens.length) {
-                                this.addFurigana(tokenList);    // Pass the tokenList to add the furigana
-                            }
-
-                        })
-                        .catch( error => {
-                            console.log('-----error-------');
-                            console.log(error);
-                        })
-                }
-                
-            }
         },
 
         methods: {
+
+            /*  Reveals the answer
+             *  
+             *  User's answer is bound to this.guess
+             */
             submitAnswer() {
                 this.isInputShown = false;
             },
 
-            getToken() {
-                console.log(this.kuroshiro);
-            },
 
             /*  The randomAudio API call returns an object with the following structure:
              *      id: Arbitrary value
@@ -128,14 +105,57 @@
                 axios('http://localhost:3000/api/randomAudio/')
                     .then(response => {
                         this.audio = response.data;
+                        this.tokenizeThenFuriganize();
                         this.computedFilepath = "http://localhost:3000/api/audio/" + response.data["filename"];
-                        this.audioComponentCounter += 1;
+                        this.audioComponentCounter += 1;    // Refresh the furigana-component
 
                     })
                     .catch(error => {
                         console.log('---error---');
                         console.log(error);
                     })
+            },
+            
+            /* First step to processing the audioKanji transcription.
+             *
+             * Currently done in two steps due to the asynchronous nature of the process
+             */
+            tokenizeThenFuriganize: function () {
+                let tokenList = []; // TokenList will contain an element for each word in the sentence to be analyzed
+                let tokens = this.tokenizer.tokenize(this.audio.audioKanji);    // Breaks the transcription up into an array of words
+                let count = 0;
+                for (let i = 0; i < tokens.length; i++) {
+
+                    //if (this.lookupsDict.hasOwnProperty(tokens[i]['basic_form']))     // To be used for 'caching'
+
+
+                    /* This API call returns the following response for each of the word tokens:
+                     *      id: ID of the word
+                     *      ent_seq: ent_seq of the word
+                     *      k_ele: k_ele of the word
+                     *      word_type: word type (noun, verb, etc.)
+                     *      createdAt: Arbitrary value
+                     *      updatedAt:Arbitrary value
+                     */
+                    axios.get('http://localhost:3000/api/lookups/?k_ele=' + tokens[i]['basic_form'])    // The 'basic_form' option passed here signifies the dictionary form of the given word
+                        .then(response => {
+                            let kanji = tokens[i]['surface_form'];  // The 'surface_form' option passed here signifies the original form used
+                            let tokenId = (response.data.id) ? response.data.id : '';   // Assign ID if match is found in the Lookup database
+                            this.$emit('updateLookups', { kanji: tokenId } );   // 'Cache' the result
+                            let newToken = { furigana: kanji, index: i, id: tokenId };  // index is assigned here to keep the word order of the transcription
+                            tokenList.push(newToken);
+                            count += 1;
+                            if (count == tokens.length) {   // When every token has been processed
+                                this.addFurigana(tokenList);    // Call second function to complete the process
+                            }
+
+                        })
+                        .catch( error => {
+                            console.log('-----error-------');
+                            console.log(error);
+                        })
+                }
+                
             },
 
             /*  Processes the audioKanji transcription, adding furigana and links to corresponding entries.
@@ -146,7 +166,7 @@
              */
             addFurigana(tokenList) {
                 let count = 0;
-                tokenList.sort((a, b) => a.index - b.index);    // Sorts in ascending order based on index value
+                tokenList.sort((a, b) => a.index - b.index);    // Sorts in ascending order based on index value (Original sentence order)
                 for (let i = 0; i < tokenList.length; i++) {
                     var promise = new Promise((resolve, reject) => {
                         async function furiganize(kuroshiro, kana, index) {

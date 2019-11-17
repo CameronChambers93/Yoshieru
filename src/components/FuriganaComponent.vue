@@ -7,8 +7,12 @@
 <script>
 
     export default {
-        props:
-            ['html'],
+        props: {
+            html: {
+                default: [],
+                type: Array
+            }
+        },
 
         created() {
         },
@@ -24,6 +28,4 @@
 
 <style lang="scss" scoped>
 
-    a {
-    }
 </style>

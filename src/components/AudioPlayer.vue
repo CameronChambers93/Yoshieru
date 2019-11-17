@@ -10,8 +10,12 @@
 <script>
 
 export default {
-    props:
-        ['filepath']
+    props: {
+        filepath: {
+            default: '',
+            type: String
+        }
+    }
 }
 
 </script>

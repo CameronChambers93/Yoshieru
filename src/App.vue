@@ -81,7 +81,8 @@ export default {
 
     created() {
 
-        this.flashcardSets['Test Deck'] = testDeck; // Import a test deck for the flash cards
+        // Import a test deck for the flash cards
+        this.flashcardSets['Test Deck'] = testDeck;
 
         // Set up the Kuromoji tokenizer and Kuroshiro furigana-izer
         var promise = new Promise((resolve, reject) => {
@@ -100,128 +101,83 @@ export default {
         });
 
         promise.then((result) => {
-            console.log("Analyzer Initialized (App.vue)")
-            this.tokenizer = result
-            this.kuroshiro = kuroshiro
-            console.log(this.kuroshiro)
-            console.log(this.tokenizer)
+            console.log("Analyzer Initialized (App.vue)");
+            this.tokenizer = result;
+            this.kuroshiro = kuroshiro;
+            console.log(this.kuroshiro);
+            console.log(this.tokenizer);
         }, (err) => {
-            console.log("Analyzer Failed to Initialize")
+                console.log("Analyzer Failed to Initialize");
             });
 
         this.$eventHub.$on('globalGetEntry', this.getEntry);
-        this.$eventHub.$on('globalUpdateLookups', this.updateLookups)
+        this.$eventHub.$on('globalUpdateLookups', this.updateLookups);
     },
 
     methods: {
 
         updateLookups(lookup) {
             this.lookupsDict[lookup.k_ele] = lookup.id;
-            console.log(this.lookups)
         },
 
         getEntry(id) {
-            console.log("pooping");
             if (id != '') {
 
                 let tmpReading = "";
+
                 if (!this.currentEntry.hasOwnProperty("k_ele"))
                     tmpReading = this.currentEntry["r_ele"][0]["reb"][0];
                 else
                     tmpReading = this.currentEntry["k_ele"][0]["keb"][0];
-                console.log("prev: " + tmpReading)
-                console.log(this.posts)
+
                 this.previousEntry = tmpReading
 
-
                 if (this.entryDict.hasOwnProperty(id)) {
-                    this.posts.push(this.entryDict[id]["json"])
+                    this.posts.push(this.entryDict[id]["json"]);
                 }
+
                 else {
                     axios.get(this.endpoint + 'entries/' + id)
                         .then(response => {
-                            this.entryDict[response.data.id] = response.data
-                            this.posts.push(response.data["json"])
+                            this.entryDict[response.data.id] = response.data;
+                            this.posts.push(response.data["json"]);
                         })
                         .catch(error => {
                             console.log('-----error-------');
-                            console.log(error)
+                            console.log(error);
                         })
                 }
             }
         },
+
+        // Updates the Dictionary component with the previous entry
         getPreviousEntry() {
             if (this.posts.length > 1) {
                 this.posts.pop();
                 this.getPreviousEntryReading();
             }
         },
+
+        // Updates the text shown in the "Previous Entry" button of the Dictionary component
         getPreviousEntryReading() {
             let tmpReading = "";
             if (this.posts.length > 2) {
-                let tmpEntry = this.posts[this.posts.length - 2]
+                let tmpEntry = this.posts[this.posts.length - 2];
                 if (!tmpEntry.hasOwnProperty("k_ele"))
                     tmpReading = tmpEntry["r_ele"][0]["reb"][0];
                 else
                     tmpReading = tmpEntry["k_ele"][0]["keb"][0];
             }
-            console.log("prev: " + tmpReading)
-            console.log(this.posts)
-            this.previousEntry = tmpReading
+            this.previousEntry = tmpReading;
         },
-        furiganize(textToFuriganize) {
-            let tokenList = []
-            let tokens = this.tokenizer.tokenize(textToFuriganize);
-            let count = 0;
-            for (let i = 0; i < tokens.length; i++) {
-                axios.get('http://localhost:3000/api/lookups/?k_ele=' + tokens[i]['basic_form'])
-                    .then(response => {
-                        let kanji = tokens[i]['surface_form']
-                        let tokenId = (response.data.id) ? response.data.id : '';
-                        let newToken = { furigana: kanji, index: i, id: tokenId }
-                        tokenList.push( newToken )
-                        count += 1;
-                        if (count == tokens.length) {
-                            return tokenList
-                        }
 
-                    })
-                    .catch( error => {
-                        console.log('-----error-------');
-                        console.log(error)
-                    })
-                
-            }
-        },
-        processFurigana(tokenList) {
-            tokenList.sort((a, b) => a.index - b.index);
-            let count = 0
-                for (let i = 0; i < tokenList.length; i++) {
-                    var promise = new Promise((resolve, reject) => {
-                        async function furiganize(kana, index) {
-                            var result = await kuroshiro.convert(kana, { mode: "furigana", to: "hiragana" });;
-                            let response = [result, kana, index]
-                            resolve(response)
-                        }
-                        furiganize(tokenList[i]['furigana'], i);
-                    });
 
-                    promise.then((result) => {
-                        tokenList[result[2]]['furigana'] = result[0]
-                        if (count == tokenList.length - 1) {
-                            return tokenList
-                        }
-                        count += 1;
-                    }, (err) => {
-                        console.log(err)
-                    });
-                }
-            }
+        
     },
 
     watch: {
         posts: function () {
-            this.currentEntry = this.posts[this.posts.length - 1]
+            this.currentEntry = this.posts[this.posts.length - 1];
         }
     }
 }

@@ -7,15 +7,17 @@
 <script>
 
     export default {
-        props:
-            ['html'],
+        props: {
+            html: "",
+            type: String
+        },
 
         created() {
         },
 
         methods: {
             emitGlobalGetEntry(id) {
-                this.$eventHub.$emit('globalGetEntry', id)
+                this.$eventHub.$emit('globalGetEntry', id);
             }
         }
     }

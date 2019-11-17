@@ -7,6 +7,7 @@
         <md-content class="content md-scrollbar">
             <p class="md-headline" >Hiragana: {{ hiragana }}</p>
 	        <p class="md-headline"  v-for='types in types'>Word type: {{ types }}</p>
+            <span class="md-display-1">Definitions:</span>
 	        <p class="md-headline"  v-for='(gloss, index) in gloss'>{{ index + 1 }}. {{ gloss }}</p>
             <div v-if='(k_ele != null) && (k_ele.length > 1)'>
                 Other forms:
@@ -66,8 +67,6 @@
         data() {
             return {
                 post: {},
-                kuroshiroAnalyzer: {},
-                kuromojiTokenizer: {},
                 reading: ""
             }
         },
@@ -121,12 +120,12 @@
         methods: {
             getReading() {
                 let tmpReading = "";
-		        if (!this.entry.hasOwnProperty("k_ele"))
-			        tmpReading = this.entry["r_ele"][0]["reb"][0];
+		        if (!this.entry.hasOwnProperty("k_ele"))    //If entry reading contains no kanji
+			        tmpReading = this.entry["r_ele"][0]["reb"][0];  
 		        else {
                     try {
                         if (this.tokenizer != null) {
-				            tmpReading = this.furiganize(this.entry["k_ele"][0]["keb"][0]);
+				            tmpReading = this.tokenizeThenFuriganize(this.entry["k_ele"][0]["keb"][0]);
                         }
 			        }
 			        catch (exception) {
@@ -138,31 +137,56 @@
                     this.reading = tmpReading;
                 }
             },
-            furiganize(textToTranslate) {
-                let tokenList = []
-                let tokens = this.tokenizer.tokenize(textToTranslate);
+
+            /* First step to processing the audioKanji transcription.
+             *
+             * Currently done in two steps due to the asynchronous nature of the process
+             */
+            tokenizeThenFuriganize(textToTranslate) {
+                let tokenList = []; // TokenList will contain an element for each word in the sentence to be analyzed
+                let tokens = this.tokenizer.tokenize(textToTranslate);    // Breaks the transcription up into an array of words
                 let count = 0;
                 for (let i = 0; i < tokens.length; i++) {
+
+
+                    /* This API call returns the following response for each of the word tokens:
+                     *      id: ID of the word
+                     *      ent_seq: ent_seq of the word
+                     *      k_ele: k_ele of the word
+                     *      word_type: word type (noun, verb, etc.)
+                     *      createdAt: Arbitrary value
+                     *      updatedAt:Arbitrary value
+                     */
                     axios.get('http://localhost:3000/api/lookups/?k_ele=' + tokens[i]['basic_form'])
                         .then(response => {
-                            let kanji = tokens[i]['surface_form']
-                            let tokenId = (response.data.id) ? response.data.id : '';
-                            let newToken = { furigana: kanji, index: i, id: tokenId }
-                            tokenList.push(newToken)
+                            
+                            let kanji = tokens[i]['surface_form'];  // The 'surface_form' option passed here signifies the original form used
+                            let tokenId = (response.data.id) ? response.data.id : '';   // Assign ID if match is found in the Lookup database
+                            this.$emit('updateLookups', { kanji: tokenId } );   // 'Cache' the result
+                            let newToken = { furigana: kanji, index: i, id: tokenId };  // index is assigned here to keep the word order of the transcription
+                            tokenList.push(newToken);
                             count += 1;
+
                             if (count == tokens.length) {
-                                return this.processFurigana(tokenList)
+                                this.addFurigana(tokenList);
                             }
 
                         })
                         .catch(error => {
                             console.log('-----error-------');
-                            console.log(error)
-                        })
+                            console.log(error);
+                        });
                 }
             },
-            processFurigana(tokenList) {
-                tokenList.sort((a, b) => a.index - b.index);
+
+            /*  Processes the audioKanji transcription, adding furigana and links to corresponding entries.
+             *  tokenList has the current configuration:
+             *      furigana: Text to which we will be adding furigana
+             *      index: Used to sort the array to preserve word order
+             *      id: Corresponding ID of the word in the Lookup/Entry tables, if it exists
+             */
+            addFurigana(tokenList) {
+                tokenList.sort((a, b) => a.index - b.index);    // Sorts in ascending order based on index value (Original sentence order)
                 let count = 0;
                 for (let i = 0; i < tokenList.length; i++) {
                     var promise = new Promise((resolve, reject) => {
