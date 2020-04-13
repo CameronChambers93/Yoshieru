@@ -1,5 +1,8 @@
 var path = require('path')
 var webpack = require('webpack')
+const UglifyJsPlugin = require('uglifyjs-webpack-plugin')
+
+
 
 module.exports = {
   entry: './src/main.js',
@@ -59,8 +62,10 @@ module.exports = {
       {
         test: /\.js$/,
         loader: 'babel-loader',
-        exclude: /node_modules/
-      },
+	exclude : ['/node_modules/']
+		
+}
+      ,
       {
         test: /\.(png|jpg|gif|svg)$/,
         loader: 'file-loader',
@@ -79,7 +84,7 @@ module.exports = {
   devServer: {
     historyApiFallback: true,
     noInfo: true,
-    overlay: true
+    overlay: true,
   },
   performance: {
     hints: false
@@ -96,12 +101,17 @@ if (process.env.NODE_ENV === 'production') {
         NODE_ENV: '"production"'
       }
     }),
-    new webpack.optimize.UglifyJsPlugin({
-      sourceMap: true,
-      compress: {
-        warnings: false
-      }
-    }),
+    new UglifyJsPlugin({
+      "uglifyOptions":
+          {
+              compress: {
+                  warnings: false
+              },
+              sourceMap: true,
+              minimize: true
+          }
+  }
+),
     new webpack.LoaderOptionsPlugin({
       minimize: true
     })
