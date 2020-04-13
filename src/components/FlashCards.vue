@@ -100,32 +100,48 @@
             // Primitive method to move the current card to the end of the current set
             answerCorrect() {
                 this.isBackShown = true;
-                if (this.sets[this.currentSet]['deck'][0]['score'] == 0) {
-                    this.sets[this.currentSet]['deck'][0]['score'] = 1;
-                    if (this.unpassedCards > 0)
-                        this.unpassedCards -= 1;
-                }
+                this.adjustScore("Passed");
                 this.sets[this.currentSet]['deck'].push(this.sets[this.currentSet]['deck'].shift());    // Moves first card to end of set
                 this.isBackShown = false;
                 this.cardCounter += 1;
             },
 
-            // Primitive method to push back the current card by one third the size of the current set
+            /*  
+             *
+             */
             answerWrong() {
                 this.isBackShown = true;
-                if (this.sets[this.currentSet]['deck'][0]['score'] == 1) {
-                    this.sets[this.currentSet]['deck'][0]['score'] = 0;
-                    if (this.unpassedCards <= this.sets[this.currentSet].length)
-                        this.unpassedCards += 1;
-                }
+
+                this.adjustScore("Failed");
+
                 let x = this.sets[this.currentSet]['deck'].length;
-                if (x < 12) {
+                if (x < 12)
                     x = x / 3;
-                }
                 let tempCard = this.sets[this.currentSet]['deck'].shift();
                 this.sets[this.currentSet]['deck'].splice(x, 0, tempCard);  
                 this.isBackShown = false;
                 this.cardCounter += 1;
+            },
+
+            /*  Adjusts the score of the current card after the user attempts an answer
+             *  
+             *  Currently implemented as a binary pass/fail, will use a more advanced method in the future
+             */
+            adjustScore(result) {
+                if (result == "Failed") {
+                    if (this.sets[this.currentSet]['deck'][0]['score'] == 1) {  // If card was previously marked 'Passed', mark it 'Failed' and adjust the score accordingly
+                        this.sets[this.currentSet]['deck'][0]['score'] = 0;
+                        if (this.unpassedCards <= this.sets[this.currentSet].length)
+                            this.unpassedCards += 1;
+                    }
+                }
+                else if (result == "Passed") {
+                    if (this.sets[this.currentSet]['deck'][0]['score'] == 0) {  // If card was previously marked 'Failed', mark it 'Passed' and adjust the score accordingly
+                        this.sets[this.currentSet]['deck'][0]['score'] = 1;
+                        if (this.unpassedCards > 0)
+                            this.unpassedCards -= 1;
+                    }
+                }
             },
 
             // Takes the user to the deck selection menu

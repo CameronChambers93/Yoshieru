@@ -73,6 +73,7 @@
 
         computed: {
 
+            // Gloss is an array containing 1 or more definitions for each entry
             gloss: function () {
                 let tmpArr = [];
                 if (this.entry["sense"] != null)
@@ -86,14 +87,17 @@
 		        return tmpArr
             },
 
+            // The reading of the entry without any Kanji
             hiragana: function () {
                 return this.entry["r_ele"][0]["reb"][0]
             },
 
+            // The reading of the entry with Kanji (If no Kanji is present, k_ele is equivalent to this.hiragana)
             k_ele: function () {
                 return this.entry["k_ele"];
             },
 
+            // keb is an array of alternative forms of the current entry
             keb: function () {
                 let tmpArr = [];
                 if (this.k_ele.length > 0) {
@@ -104,6 +108,7 @@
                 return tmpArr;
             },
 
+            // Types is an array of word types (noun, verb, etc.) for each entry 
             types: function () {
                 let tmpArr = [];
                 if (this.entry["sense"] != null) {
@@ -118,9 +123,11 @@
         },
 
         methods: {
+
+            // Returns the reading of the current entry, with or without Kanji
             getReading() {
                 let tmpReading = "";
-		        if (!this.entry.hasOwnProperty("k_ele"))    //If entry reading contains no kanji
+		        if (!this.entry.hasOwnProperty("k_ele"))    // If entry reading contains no kanji
 			        tmpReading = this.entry["r_ele"][0]["reb"][0];  
 		        else {
                     try {
@@ -157,7 +164,7 @@
                      *      createdAt: Arbitrary value
                      *      updatedAt:Arbitrary value
                      */
-                    axios.get('http://localhost:3000/api/lookups/?k_ele=' + tokens[i]['basic_form'])
+                    axios.get('http://ec2-18-216-100-58.us-east-2.compute.amazonaws.com:3000/api/lookups/?k_ele=' + tokens[i]['basic_form'])
                         .then(response => {
                             
                             let kanji = tokens[i]['surface_form'];  // The 'surface_form' option passed here signifies the original form used
@@ -191,27 +198,29 @@
                 for (let i = 0; i < tokenList.length; i++) {
                     var promise = new Promise((resolve, reject) => {
                         async function furiganize(kuroshiro, kana, index) {
-                            var result = await kuroshiro.convert(kana, { mode: "furigana", to: "hiragana" });;
+                            var result = await kuroshiro.convert(kana, { mode: "furigana", to: "hiragana" });;    // Returns the text with Furigana added
                             count += 1;
-                            let response = [result, kana, index]
+                            let response = [result, index]
                             resolve(response)
                         }
                         furiganize(this.kuroshiro, tokenList[i]['furigana'], i);
                     });
 
                     promise.then((result) => {
-                        tokenList[result[2]]['furigana'] = result[0]
+                        tokenList[result[1]]['furigana'] = result[0]    // Overwrites the basic text to the same text containing Furigana
+
                         if (count == tokenList.length) {
-                            let msg = ""
+                            let msg = "";
                             for (var token of tokenList) {
-                                msg += token.furigana + "\n"
+                                msg += token.furigana + "\n";
                             }
-                            this.reading = msg
+                            this.reading = msg;
                             return "Reading: " + msg
                         }
                     }, (err) => {
                         console.log(err)
-                    });
+                        });
+
                 }
             }
         },

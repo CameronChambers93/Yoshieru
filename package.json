@@ -21,6 +21,7 @@
     "mem": "^5.1.1",
     "rakutenma": "^1.0.0",
     "vue": "^2.5.11",
+    "vue-async-computed": "^3.7.0",
     "vue-material": "^1.0.0-beta-11"
   },
   "browserslist": [

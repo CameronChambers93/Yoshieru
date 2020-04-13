@@ -65,7 +65,7 @@ export default {
             posts: [{ent_seq: ["1562350"], k_ele: [{ keb: ["話す"], ke_pri: ["ichi1", "news1", "nf21"] }, { keb: ["咄す"] }], r_ele: [{ reb: ["はなす"], re_pri: ["ichi1", "news1", "nf21"] }], sense: [{ "pos": ["&v5s;", "&vt;"], gloss: ["to talk", "to speak", "to converse", "to chat"] }, { gloss: ["to tell", "to explain", "to narrate", "to mention", "to describe", "to discuss"] }, { gloss: ["to speak (a language)"] }]}],
             entries: [],
             entry: 53355,
-            endpoint: 'http://localhost:3000/api/',
+            endpoint: 'http://ec2-18-216-100-58.us-east-2.compute.amazonaws.com:3000/api/',
             audio: {},
             furiganaAudio: '',
             computedFilepath: '',

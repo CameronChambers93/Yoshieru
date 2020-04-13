@@ -52,9 +52,9 @@
 
         data() {
             return {
-                endpoint: 'http://localhost:3000/api/audio/',
+                endpoint: 'http://ec2-18-216-100-58.us-east-2.compute.amazonaws.com:3000/api/audio/',
                 audio: {audioEnglish: "His house is very big.", audioKana: "かれ の いえ は とても ひろい", audioKanji: "彼の家はとても広い", createdAt: "2019-08-03T14:00:04.000Z", filename: "e21548c3fc117238b1594acfecf28fb4.mp3", id: 75, updatedAt: "2019-08-03T14:00:04.000Z"},
-                computedFilepath: 'http://localhost:3000/api/audio/e21548c3fc117238b1594acfecf28fb4.mp3',
+                computedFilepath: 'http://ec2-18-216-100-58.us-east-2.compute.amazonaws.com:3000/api/audio/e21548c3fc117238b1594acfecf28fb4.mp3',
                 audioComponentCounter: 0,   // Used to refresh the furigana-component in order to refresh the audio file
                 tokenList: [],  // Array containing transcription of current audio file, with furigana and links to corresponding entries. Passed to furigana-component
                 isInputShown: true, // Used to flip between question and answer
@@ -102,11 +102,11 @@
             getAudio() {
                 this.isInputShown = true;
                 this.guess = "";
-                axios('http://localhost:3000/api/randomAudio/')
+                axios('http://ec2-18-216-100-58.us-east-2.compute.amazonaws.com:3000/api/randomAudio/')
                     .then(response => {
                         this.audio = response.data;
                         this.tokenizeThenFuriganize();
-                        this.computedFilepath = "http://localhost:3000/api/audio/" + response.data["filename"];
+                        this.computedFilepath = "http://ec2-18-216-100-58.us-east-2.compute.amazonaws.com:3000/api/audio/" + response.data["filename"];
                         this.audioComponentCounter += 1;    // Refresh the furigana-component
 
                     })
@@ -137,7 +137,7 @@
                      *      createdAt: Arbitrary value
                      *      updatedAt:Arbitrary value
                      */
-                    axios.get('http://localhost:3000/api/lookups/?k_ele=' + tokens[i]['basic_form'])    // The 'basic_form' option passed here signifies the dictionary form of the given word
+                    axios.get('http://ec2-18-216-100-58.us-east-2.compute.amazonaws.com:3000/api/lookups/?k_ele=' + tokens[i]['basic_form'])    // The 'basic_form' option passed here signifies the dictionary form of the given word
                         .then(response => {
                             let kanji = tokens[i]['surface_form'];  // The 'surface_form' option passed here signifies the original form used
                             let tokenId = (response.data.id) ? response.data.id : '';   // Assign ID if match is found in the Lookup database
