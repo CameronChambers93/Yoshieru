@@ -88,7 +88,7 @@ export default {
         var promise = new Promise((resolve, reject) => {
             async function initAnalyzer() {
                 let tokenizer = null;
-                kuromoji.builder({ dicPath: "Yoshieru/node_modules/kuromoji/dict/" }).build(function (error, _tokenizer) {
+                kuromoji.builder({ dicPath: "/Yoshieru/node_modules/kuromoji/dict/" }).build(function (error, _tokenizer) {
                     if (error != null) {
                         console.log(error);
                     }
