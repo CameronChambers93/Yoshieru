@@ -36,9 +36,9 @@ Vue.component('flashcard-component', FlashcardComponent)
 // Registers the Global Event Bus
 Vue.prototype.$eventHub = new Vue();
 
+
 new Vue({
     el: '#app',
-    components: { App },
     router,
-    template: '<App/>'
-});
+    render: h => h(App) // <-- that one
+  })

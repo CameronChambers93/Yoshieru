@@ -21,12 +21,14 @@ module.exports = {
           'css-loader'
         ],
       },
+      
       {
         test: /\.scss$/,
         use: [
           'vue-style-loader',
           'css-loader',
-          'sass-loader'
+          'sass-loader',
+          'resolve-url-loader'
         ],
       },
       {
@@ -77,7 +79,6 @@ module.exports = {
   },
   resolve: {
     alias: {
-      'vue$': 'vue/dist/vue.esm.js'
     },
     extensions: ['*', '.js', '.vue', '.json']
   },
