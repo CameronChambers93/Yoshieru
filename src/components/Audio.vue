@@ -50,11 +50,16 @@
             }
         },
 
+        created () {
+            tempToken = ['<ruby>会議<rp>(</rp><rt>かいぎ</rt><rp>)</rp></ruby>','は','4','<ruby>時<rp>(</rp><rt>とき</rt><rp>)</rp></ruby>', 'に', '<ruby>終<rp>(</rp><rt>お</rt><rp>)</rp></ruby>わり', 'ます']
+            this.addFurigana(tempToken);
+        },
+
         data() {
             return {
                 endpoint: 'http://ec2-18-216-100-58.us-east-2.compute.amazonaws.com:3000/api/audio/',
                 audio: {audioEnglish: "His house is very big.", audioKana: "かれ の いえ は とても ひろい", audioKanji: "彼の家はとても広い", createdAt: "2019-08-03T14:00:04.000Z", filename: "e21548c3fc117238b1594acfecf28fb4.mp3", id: 75, updatedAt: "2019-08-03T14:00:04.000Z"},
-                computedFilepath: 'http://ec2-18-216-100-58.us-east-2.compute.amazonaws.com:3000/api/audio/e21548c3fc117238b1594acfecf28fb4.mp3',
+                computedFilepath: 'http://ec2-18-216-100-58.us-east-2.compute.amazonaws.com:3000/api/audio/13cc999f59e4b379f17239fca629bf2f.mp3',
                 audioComponentCounter: 0,   // Used to refresh the furigana-component in order to refresh the audio file
                 tokenList: [],  // Array containing transcription of current audio file, with furigana and links to corresponding entries. Passed to furigana-component
                 isInputShown: true, // Used to flip between question and answer

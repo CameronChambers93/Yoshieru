@@ -52,7 +52,7 @@
     import Kuroshiro from 'kuroshiro';
     import KuromojiAnalyzer from "kuroshiro-analyzer-kuromoji";
     const kuroshiro = new Kuroshiro();
-    const analyzer = new KuromojiAnalyzer({ dictPath: "/Yoshieru/public/dict/" });
+    const analyzer = new KuromojiAnalyzer({ dictPath: "/public/dict/" });
     import testDeck from './assets/testCards.json'
     import kuromoji from "kuromoji";
 
@@ -88,7 +88,7 @@ export default {
         var promise = new Promise((resolve, reject) => {
             async function initAnalyzer() {
                 let tokenizer = null;
-                kuromoji.builder({ dicPath: "/Yoshieru/public/dict/" }).build(function (error, _tokenizer) {
+                kuromoji.builder({ dicPath: "/public/dict/" }).build(function (error, _tokenizer) {
                     if (error != null) {
                         console.log(error);
                     }
