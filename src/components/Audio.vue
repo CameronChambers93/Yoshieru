@@ -58,7 +58,7 @@
         data() {
             return {
                 endpoint: 'http://ec2-18-216-100-58.us-east-2.compute.amazonaws.com:3000/api/audio/',
-                audio: {audioEnglish: "His house is very big.", audioKana: "かれ の いえ は とても ひろい", audioKanji: "彼の家はとても広い", createdAt: "2019-08-03T14:00:04.000Z", filename: "e21548c3fc117238b1594acfecf28fb4.mp3", id: 75, updatedAt: "2019-08-03T14:00:04.000Z"},
+                audio: {audioEnglish: "The meeting will end at 4 o'clock.", audioKana: "かいぎ は 4 とき に おわります", audioKanji: "会議は4時に終わります", createdAt: "2019-08-03T14:00:04.000Z", filename: "e21548c3fc117238b1594acfecf28fb4.mp3", id: 75, updatedAt: "2019-08-03T14:00:04.000Z"},
                 computedFilepath: 'http://ec2-18-216-100-58.us-east-2.compute.amazonaws.com:3000/api/audio/13cc999f59e4b379f17239fca629bf2f.mp3',
                 audioComponentCounter: 0,   // Used to refresh the furigana-component in order to refresh the audio file
                 tokenList: [],  // Array containing transcription of current audio file, with furigana and links to corresponding entries. Passed to furigana-component
