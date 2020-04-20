@@ -7,6 +7,7 @@ import AudioPlayer from './components/AudioPlayer.vue';
 import FlaschCards from './components/FlashCards.vue';
 import FuriganaComponent from './components/FuriganaComponent.vue';
 import FlashcardComponent from './components/FlashcardComponent.vue';
+import AddToDictionaryPopup from './components/AddToDictionaryPopup.vue';
 
 //Importing individual Material components
 import VueMaterial from 'vue-material'
@@ -32,6 +33,7 @@ Vue.component('dictionary-container', Entry)
 Vue.component('furigana-component', FuriganaComponent)
 Vue.component('flashcard-container', FlaschCards)
 Vue.component('flashcard-component', FlashcardComponent)
+Vue.component('add-to-dictionary-popup', AddToDictionaryPopup)
 
 // Registers the Global Event Bus
 Vue.prototype.$eventHub = new Vue();

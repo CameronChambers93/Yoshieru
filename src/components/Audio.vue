@@ -51,8 +51,8 @@
         },
 
         created () {
-            let tempToken = ['<ruby>会議<rp>(</rp><rt>かいぎ</rt><rp>)</rp></ruby>','は','4','<ruby>時<rp>(</rp><rt>とき</rt><rp>)</rp></ruby>', 'に', '<ruby>終<rp>(</rp><rt>お</rt><rp>)</rp></ruby>わり', 'ます']
-            this.addFurigana(tempToken);
+            this.submitAnswer();
+            this.getAudio();
         },
 
         data() {

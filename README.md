@@ -23,3 +23,4 @@ The first step was to implement the back end needed to supply the necessary info
 
 
 I have uploaded a copy to a VM that I will try to keep available [here.](https://CameronChambers93.github.io/Yoshieru/)
+*Note, because I currently can't serve media from the backend over HTTPS, you will have to allow the loading of "Mixed Active Content"

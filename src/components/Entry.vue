@@ -1,21 +1,41 @@
 <template lang="html">
     <div>
         <md-content class="toolbar">
-            <span class="md-headline" v-html="reading"></span>
+            <span class="toolbar-text md-display-1" v-html="reading"></span>
         </md-content>
 
+        <add-to-dictionary-popup
+            v-on:closeDialog="atAddDialog = false"
+            v-bind:atAddDialog="atAddDialog"
+            v-bind:flashcardDeckNames="flashcardDeckNames"
+            v-bind:entry = "entry"
+            v-bind:gloss = "gloss">
+        </add-to-dictionary-popup>
+
         <md-content class="content md-scrollbar">
-            <p class="md-headline" >Hiragana: {{ hiragana }}</p>
-	        <p class="md-headline"  v-for='types in types'>Word type: {{ types }}</p>
-            <span class="md-display-1">Definitions:</span>
-	        <p class="md-headline"  v-for='(gloss, index) in gloss'>{{ index + 1 }}. {{ gloss }}</p>
-            <div v-if='(k_ele != null) && (k_ele.length > 1)'>
-                Other forms:
-                <p class="md-display-1"  v-for='value in keb'>
-                    {{ value }}
-                </p>
+            <div style="margin-top:.75em;" class="md-headline" >Hiragana: {{ hiragana }}</div>
+
+            <div style="display:block; margin-top:.25em">
+	            <div class="word-type-text md-headline" v-html="wordTypeText"></div>
             </div>
-            <md-button class="md-raised md-primary" v-on:click="$emit('getPreviousEntry')"><- {{ previousEntry }}</md-button>
+
+            <div style="margin: .25em 0 .25em 0;" class="md-display-1">Definitions:</div>
+            
+	        <div style="display:flex; opacity:60%; margin-bottom:.25em;" class="md-headline"  v-for='(gloss, index) in gloss' :key='index'>
+                {{ index + 1 }}.  <div style="margin-left:.25em;">{{ gloss }}</div>
+            </div>
+
+            <div style="margin-top:1em" v-if='(k_ele != null) && (k_ele.length > 1)'>
+                Other forms:
+                <div>
+                    <div style="padding-top:.25em; opacity:60%;" class="md-display-1"  v-for='value in keb'>
+                        {{ value }}
+                    </div>
+                </div>
+            </div>
+
+            <md-button style="margin-top:1em;" class="md-raised md-primary" v-on:click="$emit('getPreviousEntry')"><- {{ previousEntry }}</md-button>
+            <md-button style="margin-top:1em;" class="to-deck-btn md-raised md-primary" v-on:click="atAddDialog = true">Add card to deck</md-button>
         </md-content>
     </div>
 </template>
@@ -26,10 +46,6 @@
 
     export default {
         props: {
-            id: {
-                default: 137410,
-                type: Number
-            },
             entry: {
                 default: () => {
                     return {
@@ -53,6 +69,12 @@
                     return null
                 },
                 type: Object
+            },
+            flashcardDeckNames: {
+                default: () => {
+                    return []
+                },
+                type: Array
             }
 
         },
@@ -67,11 +89,19 @@
         data() {
             return {
                 post: {},
-                reading: ""
+                reading: "",
+                atAddDialog: false,
             }
         },
 
         computed: {
+            
+            id: () => {
+                if (this.entry == null)
+                    return null
+                else
+                    return this.entry.id
+            },
 
             // Gloss is an array containing 1 or more definitions for each entry
             gloss: function () {
@@ -109,15 +139,27 @@
             },
 
             // Types is an array of word types (noun, verb, etc.) for each entry 
-            types: function () {
+            wordTypes: function () {
                 let tmpArr = [];
                 if (this.entry["sense"] != null) {
                     for (var types of this.entry.sense[0].pos) {
                         let tag = types.replace(";", "");
-                        tmpArr.push(tagDict[tag]);
+                        tmpArr.push({ type: tagDict[tag] });
                     }
                 }
                 return tmpArr;
+            },
+
+            wordTypeText: function() {
+                let msg = ""
+                if (this.wordTypes != null) {
+                    for (let i = 0; i < this.wordTypes.length; i++) {
+                        msg += this.wordTypes[i].type
+                        if (i != this.wordTypes.length - 1)
+                            msg += "; "
+                    }
+                }
+                return msg
             }
 
         },
@@ -222,19 +264,19 @@
                         });
 
                 }
-            }
+            },
+            
         },
     
         created() {
-
-            this.getReading()
+            this.$eventHub.$emit('globalGetEntry', 1562350)
 
         },
 
         watch: {
             entry: function () {
                 this.getReading();
-            }
+            },
         }
     }
 </script>
@@ -258,9 +300,18 @@
     .toolbar {
         height: 80px;
         background-color: darkolivegreen;
-        padding: 20px 0px 20px 0px;
+        padding: 10px 0px 20px 0px;
         text-align: center;
         border-radius: 10px 10px 0px 0px;
+    }
+
+    .word-type-text {
+        font-size: medium;
+        opacity: 60%;
+    }
+
+    .to-deck-btn {
+        float: right;
     }
 
 </style>

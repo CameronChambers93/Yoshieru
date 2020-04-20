@@ -12,16 +12,22 @@
 
                     <div class="main-layout-item md-layout-item md-medium-size-33 md-small-size-50 md-xsmall-size-100">
                         <div class="main-md-content md-content md-elevation-10" v-if="(kuroshiro != null) && (tokenizer != null)">
-                            <dictionary-container v-bind:previousEntry="previousEntry" v-bind:entry="this.currentEntry" v-on:getPreviousEntry="getPreviousEntry()" v-bind:tokenizer="tokenizer" v-bind:kuroshiro="kuroshiro" class="custom-component-container"></dictionary-container>
-                        </div>
-
-                        <div v-else class="md-layout-item md-medium-size-33 md-small-size-50 md-xsmall-size-100">
+                            <dictionary-container class="custom-component-container"
+                                v-bind:previousEntry="previousEntry"
+                                v-bind:entry="this.currentEntry"
+                                v-bind:flashcardDeckNames="this.flashcardDeckNames"
+                                v-on:getPreviousEntry="getPreviousEntry()"
+                                v-bind:tokenizer="tokenizer"
+                                v-bind:kuroshiro="kuroshiro">
+                            </dictionary-container>
                         </div>
                     </div>
 
                     <div class="main-layout-item md-layout-item md-medium-size-33 md-small-size-50 md-xsmall-size-100">
                         <div class="main-md-content md-content md-elevation-10" v-if="(kuroshiro != null) && (tokenizer != null)">
-                            <flashcard-container v-bind:sets="this.flashcardSets" class="custom-component-container"></flashcard-container>
+                            <flashcard-container class="custom-component-container"
+                                v-bind:sets="this.flashcardDecks">
+                            </flashcard-container>
                         </div>
                         <div v-else class="md-layout-item md-medium-size-33 md-small-size-50 md-xsmall-size-100">
                             <h1>Loading...</h1>
@@ -30,7 +36,12 @@
 
                     <div class="main-layout-item md-layout-item md-medium-size-33 md-small-size-50 md-xsmall-size-100">
                         <div class="main-md-content md-content md-elevation-10" v-if="(kuroshiro != null) && (tokenizer != null)">
-                            <audio-container v-on:getEntry="getEntry" v-bind:lookupsDict="lookupsDict" v-bind:tokenizer="tokenizer" v-bind:kuroshiro="kuroshiro" class="custom-component-container"></audio-container>
+                            <audio-container class="custom-component-container"
+                                v-on:getEntry="getEntry"
+                                v-bind:lookupsDict="lookupsDict"
+                                v-bind:tokenizer="tokenizer"
+                                v-bind:kuroshiro="kuroshiro">
+                            </audio-container>
                         </div>
                         <div v-else class="md-layout-item md-medium-size-33 md-small-size-50 md-xsmall-size-100">
                         </div>
@@ -50,11 +61,13 @@
     import axios from 'axios';
     import "regenerator-runtime/runtime";
     import Kuroshiro from 'kuroshiro';
-    import KuromojiAnalyzer from "kuroshiro-analyzer-kuromoji";
-    const kuroshiro = new Kuroshiro();
-    const analyzer = new KuromojiAnalyzer({ dictPath: "/Yoshieru/public/dict/" });
-    import testDeck from './assets/testCards.json'
     import kuromoji from "kuromoji";
+    import KuromojiAnalyzer from "kuroshiro-analyzer-kuromoji";
+    import testDeck from './assets/testCards.json'
+
+    
+    const kuroshiro = new Kuroshiro();
+    const analyzer = new KuromojiAnalyzer({ dictPath: "/public/dict/" });
 
 
 export default {
@@ -70,25 +83,27 @@ export default {
             furiganaAudio: '',
             computedFilepath: '',
             currentEntry: { ent_seq: ["1562350"], k_ele: [{ keb: ["話す"], ke_pri: ["ichi1", "news1", "nf21"] }, { keb: ["咄す"] }], r_ele: [{ reb: ["はなす"], re_pri: ["ichi1", "news1", "nf21"] }], sense: [{ "pos": ["&v5s;", "&vt;"], gloss: ["to talk", "to speak", "to converse", "to chat"] }, { gloss: ["to tell", "to explain", "to narrate", "to mention", "to describe", "to discuss"] }, { gloss: ["to speak (a language)"] }] },
-            flashcardSets: {},
+            flashcardDecks: {},
+            flashcardDeckNames: [],
             kuroshiro: null,
             tokenizer: null,
             entryDict: {},
             lookupsDict: {},
-            previousEntry: ""
+            previousEntry: "",
+            deckSelection: []   // Used to add new cards to flashcard decks
         }
     },
 
     created() {
-
         // Import a test deck for the flash cards
-        this.flashcardSets['Test Deck'] = testDeck;
+        this.flashcardDecks['Test Deck'] = testDeck;
+        this.flashcardDeckNames.push('Test Deck');
 
         // Set up the Kuromoji tokenizer and Kuroshiro furigana-izer
         var promise = new Promise((resolve, reject) => {
             async function initAnalyzer() {
                 let tokenizer = null;
-                kuromoji.builder({ dicPath: "/Yoshieru/public/dict/" }).build(function (error, _tokenizer) {
+                kuromoji.builder({ dicPath: "/public/dict/" }).build(function (error, _tokenizer) {
                     if (error != null) {
                         console.log(error);
                     }
@@ -112,6 +127,8 @@ export default {
 
         this.$eventHub.$on('globalGetEntry', this.getEntry);
         this.$eventHub.$on('globalUpdateLookups', this.updateLookups);
+        this.$eventHub.$on('globalCreateDeck', this.createDeck);
+        this.$eventHub.$on('globalAddCardToDeck', this.addCardToDeck);
     },
 
     methods: {
@@ -120,17 +137,20 @@ export default {
             this.lookupsDict[lookup.k_ele] = lookup.id;
         },
 
+
         getEntry(id) {
             if (id != '') {
 
+                // Updates the 'previous' button text within the dictionary component
                 let tmpReading = "";
-
-                if (!this.currentEntry.hasOwnProperty("k_ele"))
-                    tmpReading = this.currentEntry["r_ele"][0]["reb"][0];
-                else
-                    tmpReading = this.currentEntry["k_ele"][0]["keb"][0];
-
-                this.previousEntry = tmpReading
+                if (this.currentEntry != null) {
+                    if (this.currentEntry.hasOwnProperty("k_ele"))
+                        tmpReading = this.currentEntry["k_ele"][0]["keb"][0];
+                    else
+                        tmpReading = this.currentEntry["r_ele"][0]["reb"][0];
+                }
+                this.previousEntry = tmpReading;
+                    
 
                 if (this.entryDict.hasOwnProperty(id)) {
                     this.posts.push(this.entryDict[id]["json"]);
@@ -171,12 +191,25 @@ export default {
             this.previousEntry = tmpReading;
         },
 
+        createDeck(deckName) {
+            this.flashcardDecks[deckName] = { "name" : deckName, "deck" : [], "numCorrect": 0 };
+            this.flashcardDeckNames.push(deckName);
+        },
 
-        
+        addCardToDeck(cardAndSelection) {
+            let selection = cardAndSelection["decks"]
+            let card = cardAndSelection["card"]
+            for (var i in selection) {
+                this.flashcardDecks[selection[i]]['deck'].push(card)
+                console.log(this.flashcardDecks[selection[i]])
+            }
+        }
+
     },
 
     watch: {
         posts: function () {
+
             this.currentEntry = this.posts[this.posts.length - 1];
         }
     }
@@ -184,6 +217,10 @@ export default {
 </script>
 
 <style lang="scss">
+
+    .yosh-main-col {
+
+    }
 
     .md-app {
     
