@@ -67,7 +67,7 @@
 
     
     const kuroshiro = new Kuroshiro();
-    const analyzer = new KuromojiAnalyzer({ dictPath: "/public/dict/" });
+    const analyzer = new KuromojiAnalyzer({ dictPath: "/Yoshieru/public/dict/" });
 
 
 export default {
@@ -103,7 +103,7 @@ export default {
         var promise = new Promise((resolve, reject) => {
             async function initAnalyzer() {
                 let tokenizer = null;
-                kuromoji.builder({ dicPath: "/public/dict/" }).build(function (error, _tokenizer) {
+                kuromoji.builder({ dicPath: "/Yoshieru/public/dict/" }).build(function (error, _tokenizer) {
                     if (error != null) {
                         console.log(error);
                     }
