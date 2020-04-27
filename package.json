@@ -21,7 +21,8 @@
     "morgan": "^1.9.1",
     "uglify-js": "git+https://github.com/mishoo/UglifyJS2.git#harmony",
     "vue": "^2.5.11",
-    "vue-material": "^1.0.0-beta-11"
+    "vue-material": "^1.0.0-beta-11",
+    "vuejs-dialog": "^1.4.1"
   },
   "browserslist": [
     "> 1%",

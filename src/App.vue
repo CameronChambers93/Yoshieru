@@ -6,9 +6,9 @@
                 <span style="margin-left:auto; margin-right: auto;" class="header md-display-1">Yosh!eru</span>
             </md-app-toolbar>
 
-            <md-app-content style="width:99%">
+            <md-app-content style="width:99%;">
 
-                <div class="md-layout md-alignment-center">
+                <div style="overflow: hidden;" class="md-layout md-alignment-center">
 
                     <div class="main-layout-item md-layout-item md-medium-size-33 md-small-size-50 md-xsmall-size-100">
                         <div class="main-md-content md-content md-elevation-10" v-if="(kuroshiro != null) && (tokenizer != null)">
@@ -26,7 +26,9 @@
                     <div class="main-layout-item md-layout-item md-medium-size-33 md-small-size-50 md-xsmall-size-100">
                         <div class="main-md-content md-content md-elevation-10" v-if="(kuroshiro != null) && (tokenizer != null)">
                             <flashcard-container class="custom-component-container"
-                                v-bind:sets="this.flashcardDecks">
+                                v-bind:sets="this.flashcardDecks"
+                                v-on:removeCardFromDeck="removeCardFromDeck()"
+                                :key="Object.keys(this.flashcardDecks).length">
                             </flashcard-container>
                         </div>
                         <div v-else class="md-layout-item md-medium-size-33 md-small-size-50 md-xsmall-size-100">
@@ -67,7 +69,7 @@
 
     
     const kuroshiro = new Kuroshiro();
-    const analyzer = new KuromojiAnalyzer({ dictPath: "/Yoshieru/public/dict/" });
+    const analyzer = new KuromojiAnalyzer({ dictPath: "/public/dict/" });
 
 
 export default {
@@ -103,7 +105,7 @@ export default {
         var promise = new Promise((resolve, reject) => {
             async function initAnalyzer() {
                 let tokenizer = null;
-                kuromoji.builder({ dicPath: "/Yoshieru/public/dict/" }).build(function (error, _tokenizer) {
+                kuromoji.builder({ dicPath: "/public/dict/" }).build(function (error, _tokenizer) {
                     if (error != null) {
                         console.log(error);
                     }
@@ -129,6 +131,7 @@ export default {
         this.$eventHub.$on('globalUpdateLookups', this.updateLookups);
         this.$eventHub.$on('globalCreateDeck', this.createDeck);
         this.$eventHub.$on('globalAddCardToDeck', this.addCardToDeck);
+        this.$eventHub.$on('globalDeleteDeck', this.deleteDeck);
     },
 
     methods: {
@@ -203,8 +206,17 @@ export default {
                 this.flashcardDecks[selection[i]]['deck'].push(card)
                 console.log(this.flashcardDecks[selection[i]])
             }
-        }
+        },
 
+        removeCardFromDeck(index, deck) {
+            console.log("hello")
+            this.flashcardDecks[deck]['deck'].splice(index, 1);
+        },
+
+        deleteDeck(deck) {
+            console.log("Deleting: " + deck)
+            delete this.flashcardDecks[deck];
+        }
     },
 
     watch: {
@@ -295,5 +307,11 @@ export default {
         overflow: auto;
     }
 
+    .dg-content {
+        color: black;
+    }
 
+    .dg-form {
+        color: black;
+    }
 </style>

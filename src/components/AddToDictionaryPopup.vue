@@ -1,15 +1,15 @@
 <template>    
     <md-dialog class="md-layout" :md-active.sync="atAddDialog" :md-click-outside-to-close="false">
-        <md-dialog-title>Select Deck</md-dialog-title>
+            <md-dialog-title>Select Deck</md-dialog-title>
             <md-dialog-content>
-                <md-content class="main-content">
-                    <md-content class="md-layout-item">  
+                <md-content style="display: flex;">
+                    <md-content class="add-to-deck-content md-layout-item">  
                         <div v-for='(name, index) in flashcardDeckNames' :key="index">
                             <md-checkbox v-model="deckSelection" :value=name>{{ name }}</md-checkbox>
                         </div>
                         <div style="color: red; margin-top: -10px" v-if="deckSelectionError == true">Please select a deck</div>
                     </md-content>
-                    <md-content class="md-layout-item">  
+                    <md-content class="add-to-deck-content md-layout-item">  
                         <div v-for='(gloss, index) in gloss' :key='index'>
                             <md-checkbox v-model="definitionSelection" :value=gloss >{{ index + 1 }}. {{ gloss }}</md-checkbox>
                         </div>
@@ -18,11 +18,11 @@
                 </md-content>     
             </md-dialog-content>
 
-        <md-dialog-actions>
-            <md-button class="md-primary" @click="closeDialog">Close</md-button>
-            <md-button class="md-primary" @click="addCardToDeck">Save</md-button>
-        </md-dialog-actions>
-    </md-dialog>
+            <md-dialog-actions>
+                <md-button class="md-primary" @click="closeDialog">Close</md-button>
+                <md-button class="md-primary" @click="addCardToDeck">Save</md-button>
+            </md-dialog-actions>
+        </md-dialog>
 </template>
 
 <script>

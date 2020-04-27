@@ -227,11 +227,13 @@
     }
 
     .toolbar {
+        display: flex;
         height: 80px;
         background-color: darkolivegreen;
-        padding: 20px 0px 20px 0px;
         text-align: center;
         border-radius: 10px 10px 0px 0px;
+        align-items: center;
+        justify-content: center;
     }
 
     .audio-player {
