@@ -6,22 +6,30 @@
                 <span style="margin-left:auto; margin-right: auto;" class="header md-display-1">Yosh!eru</span>
             </md-app-toolbar>
 
-            <md-app-content style="width:99%">
+            <md-app-content style="width:99%;">
 
-                <div class="md-layout md-alignment-center">
+                <div style="overflow: hidden;" class="md-layout md-alignment-center">
 
                     <div class="main-layout-item md-layout-item md-medium-size-33 md-small-size-50 md-xsmall-size-100">
                         <div class="main-md-content md-content md-elevation-10" v-if="(kuroshiro != null) && (tokenizer != null)">
-                            <dictionary-container v-bind:previousEntry="previousEntry" v-bind:entry="this.currentEntry" v-on:getPreviousEntry="getPreviousEntry()" v-bind:tokenizer="tokenizer" v-bind:kuroshiro="kuroshiro" class="custom-component-container"></dictionary-container>
-                        </div>
-
-                        <div v-else class="md-layout-item md-medium-size-33 md-small-size-50 md-xsmall-size-100">
+                            <dictionary-container class="custom-component-container"
+                                v-bind:previousEntry="previousEntry"
+                                v-bind:entry="this.currentEntry"
+                                v-bind:flashcardDeckNames="this.flashcardDeckNames"
+                                v-on:getPreviousEntry="getPreviousEntry()"
+                                v-bind:tokenizer="tokenizer"
+                                v-bind:kuroshiro="kuroshiro">
+                            </dictionary-container>
                         </div>
                     </div>
 
                     <div class="main-layout-item md-layout-item md-medium-size-33 md-small-size-50 md-xsmall-size-100">
                         <div class="main-md-content md-content md-elevation-10" v-if="(kuroshiro != null) && (tokenizer != null)">
-                            <flashcard-container v-bind:sets="this.flashcardSets" class="custom-component-container"></flashcard-container>
+                            <flashcard-container class="custom-component-container"
+                                v-bind:sets="this.flashcardDecks"
+                                v-on:removeCardFromDeck="removeCardFromDeck()"
+                                :key="Object.keys(this.flashcardDecks).length">
+                            </flashcard-container>
                         </div>
                         <div v-else class="md-layout-item md-medium-size-33 md-small-size-50 md-xsmall-size-100">
                             <h1>Loading...</h1>
@@ -30,7 +38,12 @@
 
                     <div class="main-layout-item md-layout-item md-medium-size-33 md-small-size-50 md-xsmall-size-100">
                         <div class="main-md-content md-content md-elevation-10" v-if="(kuroshiro != null) && (tokenizer != null)">
-                            <audio-container v-on:getEntry="getEntry" v-bind:lookupsDict="lookupsDict" v-bind:tokenizer="tokenizer" v-bind:kuroshiro="kuroshiro" class="custom-component-container"></audio-container>
+                            <audio-container class="custom-component-container"
+                                v-on:getEntry="getEntry"
+                                v-bind:lookupsDict="lookupsDict"
+                                v-bind:tokenizer="tokenizer"
+                                v-bind:kuroshiro="kuroshiro">
+                            </audio-container>
                         </div>
                         <div v-else class="md-layout-item md-medium-size-33 md-small-size-50 md-xsmall-size-100">
                         </div>
@@ -50,11 +63,12 @@
     import axios from 'axios';
     import "regenerator-runtime/runtime";
     import Kuroshiro from 'kuroshiro';
+    import kuromoji from "kuromoji";
     import KuromojiAnalyzer from "kuroshiro-analyzer-kuromoji";
+    import testDeck from './assets/testCards.json'
+
     const kuroshiro = new Kuroshiro();
     const analyzer = new KuromojiAnalyzer({ dictPath: "/public/dict/" });
-    import testDeck from './assets/testCards.json'
-    import kuromoji from "kuromoji";
 
 
 export default {
@@ -71,17 +85,21 @@ export default {
             computedFilepath: '',
             currentEntry: {"id":"1562350","kanji":[{"common":true,"text":"話す","tags":[]},{"common":false,"text":"咄す","tags":[]}],"kana":[{"common":true,"text":"はなす","tags":[],"appliesToKanji":["*"]}],"sense":[{"partOfSpeech":["v5s","vt"],"appliesToKanji":["*"],"appliesToKana":["*"],"related":[],"antonym":[],"field":[],"dialect":[],"misc":[],"info":[],"languageSource":[],"gloss":[{"type":null,"lang":"eng","text":"to talk"},{"type":null,"lang":"eng","text":"to speak"},{"type":null,"lang":"eng","text":"to converse"},{"type":null,"lang":"eng","text":"to chat"}]},{"partOfSpeech":["v5s","vt"],"appliesToKanji":["*"],"appliesToKana":["*"],"related":[],"antonym":[],"field":[],"dialect":[],"misc":[],"info":[],"languageSource":[],"gloss":[{"type":null,"lang":"eng","text":"to tell"},{"type":null,"lang":"eng","text":"to explain"},{"type":null,"lang":"eng","text":"to narrate"},{"type":null,"lang":"eng","text":"to mention"},{"type":null,"lang":"eng","text":"to describe"},{"type":null,"lang":"eng","text":"to discuss"}]},{"partOfSpeech":["v5s","vt"],"appliesToKanji":["*"],"appliesToKana":["*"],"related":[],"antonym":[],"field":[],"dialect":[],"misc":[],"info":[],"languageSource":[],"gloss":[{"type":null,"lang":"eng","text":"to speak (a language)"}]}]},
             flashcardSets: {},
+            flashcardDecks: {},
+            flashcardDeckNames: [],
             kuroshiro: null,
             tokenizer: null,
             entryDict: {},
             lookupsDict: {},
-            previousEntry: ""
+            previousEntry: "",
+            deckSelection: []   // Used to add new cards to flashcard decks
         }
     },
 
     created() {
         // Import a test deck for the flash cards
-        this.flashcardSets['Test Deck'] = testDeck;
+        this.flashcardDecks['Test Deck'] = testDeck;
+        this.flashcardDeckNames.push('Test Deck');
 
         // Set up the Kuromoji tokenizer and Kuroshiro furigana-izer
         var promise = new Promise((resolve, reject) => {
@@ -109,6 +127,9 @@ export default {
 
         this.$eventHub.$on('globalGetEntry', this.getEntry);
         this.$eventHub.$on('globalUpdateLookups', this.updateLookups);
+        this.$eventHub.$on('globalCreateDeck', this.createDeck);
+        this.$eventHub.$on('globalAddCardToDeck', this.addCardToDeck);
+        this.$eventHub.$on('globalDeleteDeck', this.deleteDeck);
     },
 
     methods: {
@@ -121,6 +142,7 @@ export default {
         getEntry(id) {
             if (id != '') {
 
+                // Updates the 'previous' button text within the dictionary component
                 let tmpReading = "";
 
                 if (!this.currentEntry.hasOwnProperty("k_ele"))
@@ -161,19 +183,41 @@ export default {
             if (this.posts.length > 2) {
                 let tmpEntry = this.posts[this.posts.length - 2];
                 if (!tmpEntry.hasOwnProperty("k_ele"))
-                    tmpReading = tmpEntry["r_ele"][0]["reb"][0];
+                    tmpReading = tmpEntry["kana"][0]["text"];
                 else
-                    tmpReading = tmpEntry["k_ele"][0]["keb"][0];
+                    tmpReading = tmpEntry["kanji"][0]["text"];
             }
             this.previousEntry = tmpReading;
         },
 
+        createDeck(deckName) {
+            this.flashcardDecks[deckName] = { "name" : deckName, "deck" : [], "numCorrect": 0 };
+            this.flashcardDeckNames.push(deckName);
+        },
 
-        
+        addCardToDeck(cardAndSelection) {
+            let selection = cardAndSelection["decks"]
+            let card = cardAndSelection["card"]
+            for (var i in selection) {
+                this.flashcardDecks[selection[i]]['deck'].push(card)
+                console.log(this.flashcardDecks[selection[i]])
+            }
+        },
+
+        removeCardFromDeck(index, deck) {
+            console.log("hello")
+            this.flashcardDecks[deck]['deck'].splice(index, 1);
+        },
+
+        deleteDeck(deck) {
+            console.log("Deleting: " + deck)
+            delete this.flashcardDecks[deck];
+        }
     },
 
     watch: {
         posts: function () {
+
             this.currentEntry = this.posts[this.posts.length - 1];
         }
     }
@@ -181,6 +225,10 @@ export default {
 </script>
 
 <style lang="scss">
+
+    .yosh-main-col {
+
+    }
 
     .md-app {
     
@@ -255,5 +303,11 @@ export default {
         overflow: auto;
     }
 
+    .dg-content {
+        color: black;
+    }
 
+    .dg-form {
+        color: black;
+    }
 </style>

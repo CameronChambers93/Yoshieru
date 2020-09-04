@@ -1,6 +1,10 @@
 <template>
     <div>
-        <a style="color: black; font-size: 30px; line-height: 36px;" v-for="tokens in html" v-on:click="emitGlobalGetEntry( tokens.id )" v-html="tokens.furigana"></a>
+        <a style="color: black; font-size: 30px; line-height: 36px;" 
+            v-for="tokens in html"
+            v-on:click="emitGlobalGetEntry( tokens.id )"
+            v-html="tokens.furigana">
+        </a>
     </div>
 </template>
 
