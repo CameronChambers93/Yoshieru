@@ -52,7 +52,7 @@
     import Kuroshiro from 'kuroshiro';
     import KuromojiAnalyzer from "kuroshiro-analyzer-kuromoji";
     const kuroshiro = new Kuroshiro();
-    const analyzer = new KuromojiAnalyzer({ dictPath: "/Yoshieru/public/dict/" });
+    const analyzer = new KuromojiAnalyzer({ dictPath: "/public/dict/" });
     import testDeck from './assets/testCards.json'
     import kuromoji from "kuromoji";
 
@@ -62,14 +62,14 @@ export default {
 
     data () {
         return {
-            posts: [{ent_seq: ["1562350"], k_ele: [{ keb: ["話す"], ke_pri: ["ichi1", "news1", "nf21"] }, { keb: ["咄す"] }], r_ele: [{ reb: ["はなす"], re_pri: ["ichi1", "news1", "nf21"] }], sense: [{ "pos": ["&v5s;", "&vt;"], gloss: ["to talk", "to speak", "to converse", "to chat"] }, { gloss: ["to tell", "to explain", "to narrate", "to mention", "to describe", "to discuss"] }, { gloss: ["to speak (a language)"] }]}],
+            posts: [{"id":"1562350","kanji":[{"common":true,"text":"話す","tags":[]},{"common":false,"text":"咄す","tags":[]}],"kana":[{"common":true,"text":"はなす","tags":[],"appliesToKanji":["*"]}],"sense":[{"partOfSpeech":["v5s","vt"],"appliesToKanji":["*"],"appliesToKana":["*"],"related":[],"antonym":[],"field":[],"dialect":[],"misc":[],"info":[],"languageSource":[],"gloss":[{"type":null,"lang":"eng","text":"to talk"},{"type":null,"lang":"eng","text":"to speak"},{"type":null,"lang":"eng","text":"to converse"},{"type":null,"lang":"eng","text":"to chat"}]},{"partOfSpeech":["v5s","vt"],"appliesToKanji":["*"],"appliesToKana":["*"],"related":[],"antonym":[],"field":[],"dialect":[],"misc":[],"info":[],"languageSource":[],"gloss":[{"type":null,"lang":"eng","text":"to tell"},{"type":null,"lang":"eng","text":"to explain"},{"type":null,"lang":"eng","text":"to narrate"},{"type":null,"lang":"eng","text":"to mention"},{"type":null,"lang":"eng","text":"to describe"},{"type":null,"lang":"eng","text":"to discuss"}]},{"partOfSpeech":["v5s","vt"],"appliesToKanji":["*"],"appliesToKana":["*"],"related":[],"antonym":[],"field":[],"dialect":[],"misc":[],"info":[],"languageSource":[],"gloss":[{"type":null,"lang":"eng","text":"to speak (a language)"}]}]}],
             entries: [],
             entry: 53355,
-            endpoint: 'http://ec2-18-216-100-58.us-east-2.compute.amazonaws.com:3000/api/',
+            endpoint: 'http://ec2-3-129-62-182.us-east-2.compute.amazonaws.com:3000/api/',
             audio: {},
             furiganaAudio: '',
             computedFilepath: '',
-            currentEntry: { ent_seq: ["1562350"], k_ele: [{ keb: ["話す"], ke_pri: ["ichi1", "news1", "nf21"] }, { keb: ["咄す"] }], r_ele: [{ reb: ["はなす"], re_pri: ["ichi1", "news1", "nf21"] }], sense: [{ "pos": ["&v5s;", "&vt;"], gloss: ["to talk", "to speak", "to converse", "to chat"] }, { gloss: ["to tell", "to explain", "to narrate", "to mention", "to describe", "to discuss"] }, { gloss: ["to speak (a language)"] }] },
+            currentEntry: {"id":"1562350","kanji":[{"common":true,"text":"話す","tags":[]},{"common":false,"text":"咄す","tags":[]}],"kana":[{"common":true,"text":"はなす","tags":[],"appliesToKanji":["*"]}],"sense":[{"partOfSpeech":["v5s","vt"],"appliesToKanji":["*"],"appliesToKana":["*"],"related":[],"antonym":[],"field":[],"dialect":[],"misc":[],"info":[],"languageSource":[],"gloss":[{"type":null,"lang":"eng","text":"to talk"},{"type":null,"lang":"eng","text":"to speak"},{"type":null,"lang":"eng","text":"to converse"},{"type":null,"lang":"eng","text":"to chat"}]},{"partOfSpeech":["v5s","vt"],"appliesToKanji":["*"],"appliesToKana":["*"],"related":[],"antonym":[],"field":[],"dialect":[],"misc":[],"info":[],"languageSource":[],"gloss":[{"type":null,"lang":"eng","text":"to tell"},{"type":null,"lang":"eng","text":"to explain"},{"type":null,"lang":"eng","text":"to narrate"},{"type":null,"lang":"eng","text":"to mention"},{"type":null,"lang":"eng","text":"to describe"},{"type":null,"lang":"eng","text":"to discuss"}]},{"partOfSpeech":["v5s","vt"],"appliesToKanji":["*"],"appliesToKana":["*"],"related":[],"antonym":[],"field":[],"dialect":[],"misc":[],"info":[],"languageSource":[],"gloss":[{"type":null,"lang":"eng","text":"to speak (a language)"}]}]},
             flashcardSets: {},
             kuroshiro: null,
             tokenizer: null,
@@ -80,7 +80,6 @@ export default {
     },
 
     created() {
-
         // Import a test deck for the flash cards
         this.flashcardSets['Test Deck'] = testDeck;
 
@@ -88,7 +87,7 @@ export default {
         var promise = new Promise((resolve, reject) => {
             async function initAnalyzer() {
                 let tokenizer = null;
-                kuromoji.builder({ dicPath: "/Yoshieru/public/dict/" }).build(function (error, _tokenizer) {
+                kuromoji.builder({ dicPath: "/public/dict/" }).build(function (error, _tokenizer) {
                     if (error != null) {
                         console.log(error);
                     }
@@ -104,8 +103,6 @@ export default {
             console.log("Analyzer Initialized (App.vue)");
             this.tokenizer = result;
             this.kuroshiro = kuroshiro;
-            console.log(this.kuroshiro);
-            console.log(this.tokenizer);
         }, (err) => {
                 console.log("Analyzer Failed to Initialize");
             });
@@ -115,32 +112,32 @@ export default {
     },
 
     methods: {
-
         updateLookups(lookup) {
             this.lookupsDict[lookup.k_ele] = lookup.id;
         },
 
+        /* 
+        */
         getEntry(id) {
             if (id != '') {
 
                 let tmpReading = "";
 
                 if (!this.currentEntry.hasOwnProperty("k_ele"))
-                    tmpReading = this.currentEntry["r_ele"][0]["reb"][0];
+                    tmpReading = this.currentEntry['kana'][0]['text'];
                 else
-                    tmpReading = this.currentEntry["k_ele"][0]["keb"][0];
+                    tmpReading = this.currentEntry['kanji'][0]['text'];
 
                 this.previousEntry = tmpReading
 
                 if (this.entryDict.hasOwnProperty(id)) {
-                    this.posts.push(this.entryDict[id]["json"]);
+                    this.posts.push(this.entryDict[id]);
                 }
-
                 else {
-                    axios.get(this.endpoint + 'entries/' + id)
+                    axios.get(this.endpoint + 'entries/?entryId=' + id)
                         .then(response => {
                             this.entryDict[response.data.id] = response.data;
-                            this.posts.push(response.data["json"]);
+                            this.posts.push(response.data);
                         })
                         .catch(error => {
                             console.log('-----error-------');

@@ -5,16 +5,31 @@
         </md-content>
 
         <md-content class="content md-scrollbar">
-            <p class="md-headline" >Hiragana: {{ hiragana }}</p>
+            <div style="display: flex; padding-top: .3em" v-if="entry.kanji.length != 0" class="md-headline" >
+                <div>
+                    Hiragana: 
+                </div>
+                <div style="display: block; padding-left: .3em">
+            
+                    <div>
+                        {{ hiragana }}
+                    </div>
+                </div>
+            </div>
+
+            <div v-if='keb.length != 0' style="display: flex; padding-top: .3em" class="md-headline">
+                <div>
+                    Other forms:
+                </div>
+                <div style="display: block; padding-left: .3em">
+                    <div class="md-display-1"  v-for='value in keb'>
+                        {{ value }}
+                    </div>
+                </div>
+            </div>
 	        <p class="md-headline"  v-for='types in types'>Word type: {{ types }}</p>
             <span class="md-display-1">Definitions:</span>
 	        <p class="md-headline"  v-for='(gloss, index) in gloss'>{{ index + 1 }}. {{ gloss }}</p>
-            <div v-if='(k_ele != null) && (k_ele.length > 1)'>
-                Other forms:
-                <p class="md-display-1"  v-for='value in keb'>
-                    {{ value }}
-                </p>
-            </div>
             <md-button class="md-raised md-primary" v-on:click="$emit('getPreviousEntry')"><- {{ previousEntry }}</md-button>
         </md-content>
     </div>
@@ -33,7 +48,7 @@
             entry: {
                 default: () => {
                     return {
-                         ent_seq: ["1562350"], k_ele: [{ keb: ["話す"], ke_pri: ["ichi1", "news1", "nf21"] }, { keb: ["咄す"] }], r_ele: [{ reb: ["はなす"], re_pri: ["ichi1", "news1", "nf21"] }], sense: [{ "pos": ["v5s", "vt"], gloss: ["to talk", "to speak", "to converse", "to chat"] }, { gloss: ["to tell", "to explain", "to narrate", "to mention", "to describe", "to discuss"] }, { gloss: ["to speak (a language)"] }]
+                         
                     }
                 },
                 type: Object
@@ -66,7 +81,7 @@
 
         data() {
             return {
-                post: {},
+                post: {"id":"1562350","kanji":[{"common":true,"text":"話す","tags":[]},{"common":false,"text":"咄す","tags":[]}],"kana":[{"common":true,"text":"はなす","tags":[],"appliesToKanji":["*"]}],"sense":[{"partOfSpeech":["v5s","vt"],"appliesToKanji":["*"],"appliesToKana":["*"],"related":[],"antonym":[],"field":[],"dialect":[],"misc":[],"info":[],"languageSource":[],"gloss":[{"type":null,"lang":"eng","text":"to talk"},{"type":null,"lang":"eng","text":"to speak"},{"type":null,"lang":"eng","text":"to converse"},{"type":null,"lang":"eng","text":"to chat"}]},{"partOfSpeech":["v5s","vt"],"appliesToKanji":["*"],"appliesToKana":["*"],"related":[],"antonym":[],"field":[],"dialect":[],"misc":[],"info":[],"languageSource":[],"gloss":[{"type":null,"lang":"eng","text":"to tell"},{"type":null,"lang":"eng","text":"to explain"},{"type":null,"lang":"eng","text":"to narrate"},{"type":null,"lang":"eng","text":"to mention"},{"type":null,"lang":"eng","text":"to describe"},{"type":null,"lang":"eng","text":"to discuss"}]},{"partOfSpeech":["v5s","vt"],"appliesToKanji":["*"],"appliesToKana":["*"],"related":[],"antonym":[],"field":[],"dialect":[],"misc":[],"info":[],"languageSource":[],"gloss":[{"type":null,"lang":"eng","text":"to speak (a language)"}]}]},
                 reading: ""
             }
         },
@@ -80,7 +95,7 @@
                     for (var sense of this.entry.sense) {
                         let msg = "";
                         for (let i = 0; i < sense.gloss.length; i++) {
-                            msg += sense.gloss[i] + ((i < sense.gloss.length - 1) ? '; ' : '');
+                            msg += sense.gloss[i]['text'] + ((i < sense.gloss.length - 1) ? '; ' : '');
                         }
                         tmpArr.push(msg);
                     }
@@ -89,22 +104,40 @@
 
             // The reading of the entry without any Kanji
             hiragana: function () {
-                return this.entry["r_ele"][0]["reb"][0]
+                if (this.kanji.length == 0) {
+                    return ""
+                }
+                else return this.kana[0]['text']
             },
 
             // The reading of the entry with Kanji (If no Kanji is present, k_ele is equivalent to this.hiragana)
-            k_ele: function () {
-                return this.entry["k_ele"];
+            kanji: function () {
+                return this.entry["kanji"];
+            },
+            kana: function() {
+                return this.entry['kana']
             },
 
             // keb is an array of alternative forms of the current entry
             keb: function () {
                 let tmpArr = [];
-                if (this.k_ele.length > 0) {
-                    for (let i = 1; i < this.k_ele.length; i++) {
-                        tmpArr.push(this.k_ele[i]["keb"][0]);
+                if (this.kanji.length > 1) {
+                    for (let i = 1; i < this.kanji.length; i++) {
+                        tmpArr.push(this.kanji[i]['text']);
+                    }
+                    if (this.kana.length > this.kanji.length) {
+                        for (let j = this.kanji.length; j< this.kana.length; j++) {
+                            tmpArr.push(this.kana[j]['text'])
+                        }
                     }
                 }
+                else if (this.kana.length > 1) {
+                    for (let i = 1; i < this.kana.length; i++) {
+                        tmpArr.push(this.kana[i]['text'])
+                    }
+                }
+                console.log(tmpArr)
+                console.log(this.kana)
                 return tmpArr;
             },
 
@@ -112,7 +145,7 @@
             types: function () {
                 let tmpArr = [];
                 if (this.entry["sense"] != null) {
-                    for (var types of this.entry.sense[0].pos) {
+                    for (var types of this.entry['sense'][0]['partOfSpeech']) {
                         let tag = types.replace(";", "");
                         tmpArr.push(tagDict[tag]);
                     }
@@ -127,12 +160,12 @@
             // Returns the reading of the current entry, with or without Kanji
             getReading() {
                 let tmpReading = "";
-		        if (!this.entry.hasOwnProperty("k_ele"))    // If entry reading contains no kanji
-			        tmpReading = this.entry["r_ele"][0]["reb"][0];  
+		        if (this.entry.kanji.length == 0)    // If entry reading contains no kanji
+			        tmpReading = this.entry['kana'][0].text;  
 		        else {
                     try {
                         if (this.tokenizer != null) {
-				            tmpReading = this.tokenizeThenFuriganize(this.entry["k_ele"][0]["keb"][0]);
+				            tmpReading = this.tokenizeThenFuriganize(this.entry['kanji'][0].text);
                         }
 			        }
 			        catch (exception) {
@@ -164,7 +197,7 @@
                      *      createdAt: Arbitrary value
                      *      updatedAt:Arbitrary value
                      */
-                    axios.get('http://ec2-18-216-100-58.us-east-2.compute.amazonaws.com:3000/api/lookups/?k_ele=' + tokens[i]['basic_form'])
+                    axios.get('http://ec2-3-129-62-182.us-east-2.compute.amazonaws.com:3000/api/lookups/?k_ele=' + tokens[i]['basic_form'])
                         .then(response => {
                             
                             let kanji = tokens[i]['surface_form'];  // The 'surface_form' option passed here signifies the original form used

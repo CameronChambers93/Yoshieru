@@ -19,6 +19,7 @@
 
         methods: {
             emitGlobalGetEntry(id) {
+                console.log(id)
                 this.$eventHub.$emit('globalGetEntry', id)
             }
         }

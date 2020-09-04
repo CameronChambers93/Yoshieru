@@ -51,19 +51,19 @@
         },
 
         created () {
-            let tempToken = ['<ruby>会議<rp>(</rp><rt>かいぎ</rt><rp>)</rp></ruby>','は','4','<ruby>時<rp>(</rp><rt>とき</rt><rp>)</rp></ruby>', 'に', '<ruby>終<rp>(</rp><rt>お</rt><rp>)</rp></ruby>わり', 'ます']
-            this.addFurigana(tempToken);
+            this.tokenizeThenFuriganize()
         },
 
         data() {
             return {
-                endpoint: 'http://ec2-18-216-100-58.us-east-2.compute.amazonaws.com:3000/api/audio/',
+                endpoint: 'http://ec2-3-129-62-182.us-east-2.compute.amazonaws.com:3000/api/audio/',
                 audio: {audioEnglish: "The meeting will end at 4 o'clock.", audioKana: "かいぎ は 4 とき に おわります", audioKanji: "会議は4時に終わります", createdAt: "2019-08-03T14:00:04.000Z", filename: "e21548c3fc117238b1594acfecf28fb4.mp3", id: 75, updatedAt: "2019-08-03T14:00:04.000Z"},
-                computedFilepath: 'http://ec2-18-216-100-58.us-east-2.compute.amazonaws.com:3000/api/audio/13cc999f59e4b379f17239fca629bf2f.mp3',
+                computedFilepath: 'http://ec2-3-129-62-182.us-east-2.compute.amazonaws.com:3000/api/audio/13cc999f59e4b379f17239fca629bf2f.mp3',
                 audioComponentCounter: 0,   // Used to refresh the furigana-component in order to refresh the audio file
                 tokenList: [],  // Array containing transcription of current audio file, with furigana and links to corresponding entries. Passed to furigana-component
                 isInputShown: true, // Used to flip between question and answer
-                guess: ""   // The user's latest guess
+                guess: "",   // The user's latest guess,
+                posDict: {'名詞': 'n', '助詞': 'prt', '形容詞': 'adj', "動詞": 'v', '連体詞': 'adj'}
             }
         },
 
@@ -99,19 +99,15 @@
              *      audioKanji: Text transcription of the audio file
              *      audioKana: Text transcription of the audio file without kanji
              *      audioEnglish: English translation of audioKanji/audioKana
-             *      createdAt: Arbitrary value
-             *      updatedAt:Arbitrary value
-             *
-             *  The audio API call returns an audio stream of the specified file to be used by the mediaserver library
              */
             getAudio() {
                 this.isInputShown = true;
                 this.guess = "";
-                axios('http://ec2-18-216-100-58.us-east-2.compute.amazonaws.com:3000/api/randomAudio/')
+                axios('http://ec2-3-129-62-182.us-east-2.compute.amazonaws.com:3000/api/randomAudio/')
                     .then(response => {
                         this.audio = response.data;
                         this.tokenizeThenFuriganize();
-                        this.computedFilepath = "http://ec2-18-216-100-58.us-east-2.compute.amazonaws.com:3000/api/audio/" + response.data["filename"];
+                        this.computedFilepath = "http://ec2-3-129-62-182.us-east-2.compute.amazonaws.com:3000/api/audio/" + response.data["filename"];  // This API call returns an audio stream of the specified file to be used by the mediaserver library
                         this.audioComponentCounter += 1;    // Refresh the furigana-component
 
                     })
@@ -142,10 +138,10 @@
                      *      createdAt: Arbitrary value
                      *      updatedAt:Arbitrary value
                      */
-                    axios.get('http://ec2-18-216-100-58.us-east-2.compute.amazonaws.com:3000/api/lookups/?k_ele=' + tokens[i]['basic_form'])    // The 'basic_form' option passed here signifies the dictionary form of the given word
+                    axios.get('http://ec2-3-129-62-182.us-east-2.compute.amazonaws.com:3000/api/lookups/?k_ele=' + tokens[i]['basic_form'] + '&pos=' + this.posDict[tokens[i].pos])    // The 'basic_form' option passed here signifies the dictionary form of the given word
                         .then(response => {
                             let kanji = tokens[i]['surface_form'];  // The 'surface_form' option passed here signifies the original form used
-                            let tokenId = (response.data.id) ? response.data.id : '';   // Assign ID if match is found in the Lookup database
+                            let tokenId = (response.data) ? response.data : '';   // Assign ID if match is found in the Lookup database
                             this.$emit('updateLookups', { kanji: tokenId } );   // 'Cache' the result
                             let newToken = { furigana: kanji, index: i, id: tokenId };  // index is assigned here to keep the word order of the transcription
                             tokenList.push(newToken);
@@ -187,7 +183,6 @@
 
                     promise.then((result) => {
                         this.tokenList = result; // Assign the updated tokenList after the promise has resolved
-
                     }, (err) => {
                             console.log(err);
                     });

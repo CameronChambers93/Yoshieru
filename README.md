@@ -22,4 +22,4 @@ I have experience with a couple of frameworks, but felt none of them really fit 
 The first step was to implement the back end needed to supply the necessary information for this project. I did a little bit of searching and came across [JMDict](http://edrdg.org/jmdict/j_jmdict.html), which since 1996 has had "at its aim the compilation of a multilingual lexical database with Japanese as the pivot language." The database holds information about 'every' Japanese word, including definitions, word type, and auxiliary information. I imported the JMDict database into a Postgres database and set up a Node.js server to handle read requests to the database. One table contains an entry for each word in the JMDict, a second contains information needed to aid in querying for words, and a third which contains information used for streaming audio files.
 
 
-I have uploaded a copy to a VM that I will try to keep available [here.](https://CameronChambers93.github.io/Yoshieru/)
+I have uploaded a copy to a VM that I will try to keep available [here.](http://ec2-3-129-62-182.us-east-2.compute.amazonaws.com:3000/)
