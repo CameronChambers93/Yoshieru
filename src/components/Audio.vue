@@ -51,7 +51,7 @@
         },
 
         created () {
-            this.tokenizeThenFuriganize()
+            this.tokenize()
         },
 
         data() {
@@ -68,11 +68,11 @@
         },
 
         computed: {
-            audioEnglish: function () {
+            audioEnglish: function () {                 // English transcription of the current audio sample
                 if (this.audio.audioEnglish != null)
                     return this.audio.audioEnglish
             },
-            audioKana: function () {
+            audioKana: function () {                    // Japanese transcription of the current audio sample
                 if (this.audio.audioKana != null)
                     return this.audio.audioKana
             }
@@ -94,7 +94,6 @@
 
 
             /*  The randomAudio API call returns an object with the following structure:
-             *      id: Arbitrary value
              *      filename: filename of the audio file on the API server
              *      audioKanji: Text transcription of the audio file
              *      audioKana: Text transcription of the audio file without kanji
@@ -106,7 +105,7 @@
                 axios('http://ec2-3-129-62-182.us-east-2.compute.amazonaws.com:3000/api/randomAudio/')
                     .then(response => {
                         this.audio = response.data;
-                        this.tokenizeThenFuriganize();
+                        this.tokenize();
                         this.computedFilepath = "http://ec2-3-129-62-182.us-east-2.compute.amazonaws.com:3000/api/audio/" + response.data["filename"];  // This API call returns an audio stream of the specified file to be used by the mediaserver library
                         this.audioComponentCounter += 1;    // Refresh the furigana-component
 
@@ -121,27 +120,22 @@
              *
              * Currently done in two steps due to the asynchronous nature of the process
              */
-            tokenizeThenFuriganize: function () {
+            tokenize: function () {
                 let tokenList = []; // TokenList will contain an element for each word in the sentence to be analyzed
                 let tokens = this.tokenizer.tokenize(this.audio.audioKanji);    // Breaks the transcription up into an array of words
                 let count = 0;
                 for (let i = 0; i < tokens.length; i++) {
 
-                    //if (this.lookupsDict.hasOwnProperty(tokens[i]['basic_form']))     // To be used for 'caching'
+                    if (this.lookupsDict.hasOwnProperty([tokens[i]['basic_form'], this.posDict[tokens[i].pos]])) {    // To be used for 'caching'
+                        console.log('')
+                    }
 
-
-                    /* This API call returns the following response for each of the word tokens:
-                     *      id: ID of the word
-                     *      ent_seq: ent_seq of the word
-                     *      k_ele: k_ele of the word
-                     *      word_type: word type (noun, verb, etc.)
-                     *      createdAt: Arbitrary value
-                     *      updatedAt:Arbitrary value
+                    /* This API call returns the ID of the word (if found) corresponding to 'k_ele' with 'pos' as its word type
                      */
                     axios.get('http://ec2-3-129-62-182.us-east-2.compute.amazonaws.com:3000/api/lookups/?k_ele=' + tokens[i]['basic_form'] + '&pos=' + this.posDict[tokens[i].pos])    // The 'basic_form' option passed here signifies the dictionary form of the given word
                         .then(response => {
                             let kanji = tokens[i]['surface_form'];  // The 'surface_form' option passed here signifies the original form used
-                            let tokenId = (response.data) ? response.data : '';   // Assign ID if match is found in the Lookup database
+                            let tokenId = (response.data) ? response.data : '';   // tokenId is used to create the Dictionary links
                             this.$emit('updateLookups', { kanji: tokenId } );   // 'Cache' the result
                             let newToken = { furigana: kanji, index: i, id: tokenId };  // index is assigned here to keep the word order of the transcription
                             tokenList.push(newToken);

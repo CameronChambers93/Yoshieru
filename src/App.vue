@@ -26,7 +26,7 @@
                     <div class="main-layout-item md-layout-item md-medium-size-33 md-small-size-50 md-xsmall-size-100">
                         <div class="main-md-content md-content md-elevation-10" v-if="(kuroshiro != null) && (tokenizer != null)">
                             <flashcard-container class="custom-component-container"
-                                v-bind:sets="this.flashcardDecks"
+                                v-bind:decks="this.flashcardDecks"
                                 v-on:removeCardFromDeck="removeCardFromDeck()"
                                 :key="Object.keys(this.flashcardDecks).length">
                             </flashcard-container>
@@ -72,34 +72,42 @@
 
 
 export default {
-    name: "App",
+    name: "App",       
+
+    metaInfo() {
+        return { 
+            title: "Yoshieru - Japanese Study Tool",
+        };
+    },
 
     data () {
         return {
-            posts: [{"id":"1562350","kanji":[{"common":true,"text":"話す","tags":[]},{"common":false,"text":"咄す","tags":[]}],"kana":[{"common":true,"text":"はなす","tags":[],"appliesToKanji":["*"]}],"sense":[{"partOfSpeech":["v5s","vt"],"appliesToKanji":["*"],"appliesToKana":["*"],"related":[],"antonym":[],"field":[],"dialect":[],"misc":[],"info":[],"languageSource":[],"gloss":[{"type":null,"lang":"eng","text":"to talk"},{"type":null,"lang":"eng","text":"to speak"},{"type":null,"lang":"eng","text":"to converse"},{"type":null,"lang":"eng","text":"to chat"}]},{"partOfSpeech":["v5s","vt"],"appliesToKanji":["*"],"appliesToKana":["*"],"related":[],"antonym":[],"field":[],"dialect":[],"misc":[],"info":[],"languageSource":[],"gloss":[{"type":null,"lang":"eng","text":"to tell"},{"type":null,"lang":"eng","text":"to explain"},{"type":null,"lang":"eng","text":"to narrate"},{"type":null,"lang":"eng","text":"to mention"},{"type":null,"lang":"eng","text":"to describe"},{"type":null,"lang":"eng","text":"to discuss"}]},{"partOfSpeech":["v5s","vt"],"appliesToKanji":["*"],"appliesToKana":["*"],"related":[],"antonym":[],"field":[],"dialect":[],"misc":[],"info":[],"languageSource":[],"gloss":[{"type":null,"lang":"eng","text":"to speak (a language)"}]}]}],
-            entries: [],
-            entry: 53355,
-            endpoint: 'http://ec2-3-129-62-182.us-east-2.compute.amazonaws.com:3000/api/',
-            audio: {},
-            furiganaAudio: '',
-            computedFilepath: '',
-            currentEntry: {"id":"1562350","kanji":[{"common":true,"text":"話す","tags":[]},{"common":false,"text":"咄す","tags":[]}],"kana":[{"common":true,"text":"はなす","tags":[],"appliesToKanji":["*"]}],"sense":[{"partOfSpeech":["v5s","vt"],"appliesToKanji":["*"],"appliesToKana":["*"],"related":[],"antonym":[],"field":[],"dialect":[],"misc":[],"info":[],"languageSource":[],"gloss":[{"type":null,"lang":"eng","text":"to talk"},{"type":null,"lang":"eng","text":"to speak"},{"type":null,"lang":"eng","text":"to converse"},{"type":null,"lang":"eng","text":"to chat"}]},{"partOfSpeech":["v5s","vt"],"appliesToKanji":["*"],"appliesToKana":["*"],"related":[],"antonym":[],"field":[],"dialect":[],"misc":[],"info":[],"languageSource":[],"gloss":[{"type":null,"lang":"eng","text":"to tell"},{"type":null,"lang":"eng","text":"to explain"},{"type":null,"lang":"eng","text":"to narrate"},{"type":null,"lang":"eng","text":"to mention"},{"type":null,"lang":"eng","text":"to describe"},{"type":null,"lang":"eng","text":"to discuss"}]},{"partOfSpeech":["v5s","vt"],"appliesToKanji":["*"],"appliesToKana":["*"],"related":[],"antonym":[],"field":[],"dialect":[],"misc":[],"info":[],"languageSource":[],"gloss":[{"type":null,"lang":"eng","text":"to speak (a language)"}]}]},
-            flashcardSets: {},
-            flashcardDecks: {},
-            flashcardDeckNames: [],
-            kuroshiro: null,
-            tokenizer: null,
-            entryDict: {},
-            lookupsDict: {},
-            previousEntry: "",
-            deckSelection: []   // Used to add new cards to flashcard decks
+            posts: [],                  // A stack of words the user has looked up, to act as a 'history' feature
+            endpoint: 'http://ec2-3-129-62-182.us-east-2.compute.amazonaws.com:3000/api/',      // API endpoing
+            currentEntry: {},           // The word currently being defined
+            flashcardDecks: {},         // Contains the flashcard decks
+            kuroshiro: null,            // For adding furigana
+            tokenizer: null,            // For splitting sentences into individual words (tokens)
+            entryDict: {},              // For caching definitions
+            lookupsDict: {},            // For caching searches
+            previousEntry: "",          // Text displayed in the 'back' button in the Dictionary
+            deckSelection: []           // Used to add new cards to flashcard decks
+        }
+    },
+
+    computed: {
+        
+        flashcardDeckNames: function() {
+            return Object.keys(this.flashcardDecks)
         }
     },
 
     created() {
+        // Initiate a placeholder definition in the Dictionary
+        this.posts.push({"id":"1562350","kanji":[{"common":true,"text":"話す","tags":[]},{"common":false,"text":"咄す","tags":[]}],"kana":[{"common":true,"text":"はなす","tags":[],"appliesToKanji":["*"]}],"sense":[{"partOfSpeech":["v5s","vt"],"appliesToKanji":["*"],"appliesToKana":["*"],"related":[],"antonym":[],"field":[],"dialect":[],"misc":[],"info":[],"languageSource":[],"gloss":[{"type":null,"lang":"eng","text":"to talk"},{"type":null,"lang":"eng","text":"to speak"},{"type":null,"lang":"eng","text":"to converse"},{"type":null,"lang":"eng","text":"to chat"}]},{"partOfSpeech":["v5s","vt"],"appliesToKanji":["*"],"appliesToKana":["*"],"related":[],"antonym":[],"field":[],"dialect":[],"misc":[],"info":[],"languageSource":[],"gloss":[{"type":null,"lang":"eng","text":"to tell"},{"type":null,"lang":"eng","text":"to explain"},{"type":null,"lang":"eng","text":"to narrate"},{"type":null,"lang":"eng","text":"to mention"},{"type":null,"lang":"eng","text":"to describe"},{"type":null,"lang":"eng","text":"to discuss"}]},{"partOfSpeech":["v5s","vt"],"appliesToKanji":["*"],"appliesToKana":["*"],"related":[],"antonym":[],"field":[],"dialect":[],"misc":[],"info":[],"languageSource":[],"gloss":[{"type":null,"lang":"eng","text":"to speak (a language)"}]}]})
+
         // Import a test deck for the flash cards
         this.flashcardDecks['Test Deck'] = testDeck;
-        this.flashcardDeckNames.push('Test Deck');
 
         // Set up the Kuromoji tokenizer and Kuroshiro furigana-izer
         var promise = new Promise((resolve, reject) => {
@@ -117,6 +125,7 @@ export default {
             initAnalyzer();
         });
 
+
         promise.then((result) => {
             console.log("Analyzer Initialized (App.vue)");
             this.tokenizer = result;
@@ -133,32 +142,30 @@ export default {
     },
 
     methods: {
+        /* For future caching use
+        */
         updateLookups(lookup) {
-            this.lookupsDict[lookup.k_ele] = lookup.id;
+            this.$set(this.lookupsDict, lookup.k_ele, lookup.id);
         },
 
-        /* 
+        /* Updates the current entry in the Dictionary component
         */
         getEntry(id) {
             if (id != '') {
-
-                // Updates the 'previous' button text within the dictionary component
-                let tmpReading = "";
-
-                if (!this.currentEntry.hasOwnProperty("k_ele"))
+                let tmpReading = "";                                            // Updates the 'previous' button text
+                if (this.currentEntry.hasOwnProperty("kanji"))
                     tmpReading = this.currentEntry['kana'][0]['text'];
                 else
                     tmpReading = this.currentEntry['kanji'][0]['text'];
-
                 this.previousEntry = tmpReading
 
-                if (this.entryDict.hasOwnProperty(id)) {
+                if (this.entryDict.hasOwnProperty(id)) {                        // Checks if entry has already been cached
                     this.posts.push(this.entryDict[id]);
                 }
                 else {
-                    axios.get(this.endpoint + 'entries/?entryId=' + id)
+                    axios.get(this.endpoint + 'entries/?entryId=' + id)         // API call to get new entry
                         .then(response => {
-                            this.entryDict[response.data.id] = response.data;
+                            this.$set(this.entryDict, response.data.id, response.data);
                             this.posts.push(response.data);
                         })
                         .catch(error => {
@@ -190,35 +197,42 @@ export default {
             this.previousEntry = tmpReading;
         },
 
+        /*  Creates new flashcard deck with name 'deckName'
+        */
         createDeck(deckName) {
-            this.flashcardDecks[deckName] = { "name" : deckName, "deck" : [], "numCorrect": 0 };
-            this.flashcardDeckNames.push(deckName);
+            this.$set(this.flashcardDecks, deckName, { "name" : deckName, "deck" : [], "numCorrect": 0 });
         },
 
+        /*  Adds new flashcard to specified deck(s)
+            cardAndSelection: {
+                decks: Array of deck names to which the new card will be added
+                card: Contents of the new card
+            }
+        */
         addCardToDeck(cardAndSelection) {
-            let selection = cardAndSelection["decks"]
-            let card = cardAndSelection["card"]
+            let selection = cardAndSelection.decks
+            let card = cardAndSelection.card
             for (var i in selection) {
                 this.flashcardDecks[selection[i]]['deck'].push(card)
-                console.log(this.flashcardDecks[selection[i]])
             }
         },
 
-        removeCardFromDeck(index, deck) {
-            console.log("hello")
-            this.flashcardDecks[deck]['deck'].splice(index, 1);
+        /* Removes card at position 'index' from deck with name 'deckName'
+        */
+        removeCardFromDeck(index, deckName) {
+            this.flashcardDecks[deckName].deck.splice(index, 1);
         },
 
+        /* Deletes specified deck
+        */
         deleteDeck(deck) {
-            console.log("Deleting: " + deck)
             delete this.flashcardDecks[deck];
         }
     },
 
     watch: {
         posts: function () {
-
-            this.currentEntry = this.posts[this.posts.length - 1];
+            this.currentEntry = this.posts[this.posts.length - 1];      // Updates the current entry when a new word is defined
         }
     }
 }

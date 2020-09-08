@@ -22,8 +22,9 @@
         },
 
         methods: {
+            /* Updates the currenty entry in the Dictionary
+            */
             emitGlobalGetEntry(id) {
-                console.log(id)
                 this.$eventHub.$emit('globalGetEntry', id)
             }
         }
