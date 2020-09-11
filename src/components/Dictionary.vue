@@ -33,6 +33,14 @@
             </div>
             <div style="margin-top: .2em" class="md-display-1">Definitions:</div>
 	        <div class="md-headline" style="margin-left: 1em"  v-for='(gloss, index) in gloss'>{{ index + 1 }}. {{ gloss }}</div>
+
+            <div class='example_sentences'>
+                <div style="text-align: left; margin-bottom:.5rem" class="md-display-1" v-if="(exampleSentences.length)">Examples:</div>
+                <div v-for='(sentence, index) of exampleSentences'>
+                    <div class="ex_sentence_jpn">{{ sentence.jpn_text }}</div>
+                    <div class="ex_sentence_eng">{{ sentence.eng_text }}</div>
+                </div>
+            </div>
             <md-button style="margin-top:1em;" class="md-raised md-primary" v-on:click="$emit('getPreviousEntry')"><- {{ previousEntry }}</md-button>
             <md-button style="margin-top:1em; float: right;" class="to-deck-btn md-raised md-primary" v-on:click="atAddDialog = true">Add card to deck</md-button>
 
@@ -133,12 +141,15 @@ export default {
 
     data() {
         return {
+            endpoint: 'http://localhost:3000/api/',
             reading: "",                        // The text displayed in the Dictionary header
             atAddDialog: false,                 // For current dialog display.                      TODO: Replace with modal
             deckSelection: [],                  // For selecting the decks to which new flashcards will be added
             definitionSelection: [],            // For selecting which definition(s) will be added to new flashcards
             deckSelectionError: false,          // Shows error if user doesn't select a deck for adding flashcards
             definitionSelectionError: false,    // Shows error if user doesn't specify which definition(s) to add to flashcard
+            exampleSentenceIDs: [],
+            exampleSentences: [],
         }
     },
 
@@ -234,6 +245,7 @@ export default {
     
     created() {
             this.getReading();
+            this.getSentenceIDs("話す")
     },
 
     methods: {
@@ -241,8 +253,9 @@ export default {
         // Returns the reading of the current entry, with or without Kanji
         getReading() {
             let tmpReading = "";
-            if (this.entry.kanji.length == 0)    // If entry reading contains no kanji
+            if (this.entry.kanji.length == 0) {   // If entry reading contains no kanji
                 tmpReading = this.entry['kana'][0].text;  
+            }
             else {
                 try {
                     if (this.tokenizer != null) {
@@ -254,9 +267,10 @@ export default {
                     tmpReading = exception;
                 }
             }
-            if (tmpReading != "") {
+            if (tmpReading != undefined) {
                 this.reading = tmpReading;
             }
+            
         },
 
         /*  Adds furigana to the kanji displayed in the Dictionary header
@@ -345,6 +359,33 @@ export default {
         closeDialog() {
             this.deckSelectionError = false;
             this.atAddDialog = false;
+        },
+        getSentenceIDs(reading) {
+            console.log(reading)
+            axios(this.endpoint + 'find_sentences/?k_ele=' + reading)
+                    .then(response => {
+                        this.exampleSentenceIDs = response.data
+                        this.exampleSentences = []
+                        this.getSentences()
+                    })
+                    .catch(error => {
+                        console.log('---error---');
+                        console.log(error);
+                    })
+        },
+        getSentences() {
+            let numberOfSentences = (this.exampleSentenceIDs.length < 5) ? this.exampleSentenceIDs : 5
+            for (let i = 0; i < numberOfSentences; i++) {
+                axios(this.endpoint + 'sentence/?sentence_id=' + this.exampleSentenceIDs[i])
+                    .then(response => {
+                        console.log(response.data)
+                        this.exampleSentences.push(response.data)
+                    })
+                    .catch(error => {
+                        console.log('---error---');
+                        console.log(error);
+                    })
+            }
         }
         
     },
@@ -353,7 +394,13 @@ export default {
     watch: {
         /* Updates the Dictionary contents when a new word is selected
         */
-        entry: function () {
+        entry: function (newEntry) {
+            if (newEntry.kanji.length == 0) {
+                this.getSentenceIDs(newEntry.kana[0].text)
+            }
+            else {
+                this.getSentenceIDs(newEntry.kanji[0].text)
+            }
             this.getReading();
         },
     }
@@ -404,4 +451,17 @@ export default {
         background: transparent;  /* Optional: just make scrollbar invisible */
     }
 
+    .example_sentences{
+        text-align: right;
+    }
+
+    .ex_sentence_jpn{
+        font-size: 1.4rem;
+    }
+
+    .ex_sentence_eng{
+        font-size: 1em;
+        opacity: 80%;
+        margin-bottom: 1rem
+    }
 </style>

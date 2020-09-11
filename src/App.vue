@@ -83,7 +83,7 @@ export default {
     data () {
         return {
             posts: [],                  // A stack of words the user has looked up, to act as a 'history' feature
-            endpoint: 'http://ec2-3-129-62-182.us-east-2.compute.amazonaws.com:3000/api/',      // API endpoing
+            endpoint: 'http://ec2-3-129-62-182.us-east-2.compute.amazonaws.com:3000/api/',      // API endpoint
             currentEntry: {},           // The word currently being defined
             flashcardDecks: {},         // Contains the flashcard decks
             kuroshiro: null,            // For adding furigana

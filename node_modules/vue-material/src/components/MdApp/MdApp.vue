@@ -2,7 +2,7 @@
   import Vue from 'vue'
   import MdAppSideDrawer from './MdAppSideDrawer'
   import MdAppInternalDrawer from './MdAppInternalDrawer'
-  import MdDrawerRightPrevious from '../MdDrawer/MdDrawerRightPrevious';
+  import MdDrawerRightPrevious from '../MdDrawer/MdDrawerRightPrevious'
 
   const componentTypes = [
     'md-app-toolbar',
@@ -84,7 +84,7 @@
   function getDrawers (children) {
     const drawerVnodes = children.filter(child => {
       const tag = child.data.slot || normilizeTagName(child.componentOptions.tag)
-      return tag === 'md-app-drawer'
+      return ['md-app-drawer', 'md-app-drawer-right', 'md-app-drawer-left'].indexOf(tag) > -1
     })
     return drawerVnodes.length ? drawerVnodes : []
   }
