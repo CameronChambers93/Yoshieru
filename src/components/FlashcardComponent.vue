@@ -1,6 +1,5 @@
 <template>
-    <div>
-        {{ html }}
+    <div v-html="_html">
     </div>
 </template>
 
@@ -8,17 +7,16 @@
 
     export default {
         props: {
-            html: "",
-            type: String
+            _html: {
+                default: "",
+                type: String
+            }
         },
 
         created() {
         },
 
         methods: {
-            emitGlobalGetEntry(id) {
-                this.$eventHub.$emit('globalGetEntry', id);
-            }
         }
     }
 

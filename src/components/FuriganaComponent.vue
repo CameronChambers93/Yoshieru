@@ -1,19 +1,21 @@
 <template>
     <div>
         <a style="color: black; font-size: 30px; line-height: 36px;" 
-            v-for="tokens in html"
-            v-on:click="emitGlobalGetEntry( tokens.id )"
-            v-html="tokens.furigana">
+            v-for="(token, key) in tokens"
+            v-bind:key='key'
+            v-on:click="emitGlobalGetEntry( token.ids )"
+            v-html="token.furigana">
         </a>
     </div>
 </template>
 
 <script>
+import { mapActions } from 'vuex'
 
     export default {
         props: {
-            html: {
-                default: [],
+            tokens: {
+                default: () => {return []},
                 type: Array
             }
         },
@@ -22,8 +24,13 @@
         },
 
         methods: {
-            emitGlobalGetEntry(id) {
-                this.$eventHub.$emit('globalGetEntry', id)
+            ...mapActions('dictionary', {
+                LOOKUP: 'LOOKUP'
+            }),
+            emitGlobalGetEntry(ids) {
+                if (ids.length)
+                    this.$store.dispatch('dictionary/LOOKUP', { ids })
+                //this.$eventHub.$emit('globalGetEntry', id)
             }
         }
     }

@@ -24,7 +24,8 @@
       :placeholder="mdPlaceholder"
       @input="handleInput"
       @keydown.enter="insertChip"
-      @keydown.8="handleBackRemove">
+      @keydown.8="handleBackRemove"
+      @focusout="handleFocusOut">
     </md-input>
   </md-field>
 </template>
@@ -54,6 +55,10 @@
       },
       mdPlaceholder: [String, Number],
       mdStatic: Boolean,
+      mdAutoInsert: {
+        type: Boolean,
+        default: false
+      },
       mdLimit: Number,
       mdCheckDuplicated: {
         type: Boolean,
@@ -125,6 +130,11 @@
           this.checkDuplicated()
         } else {
           this.duplicatedChip = null
+        }
+      },
+      handleFocusOut ({ target }) {
+        if (this.mdAutoInsert) {
+          this.insertChip(target)
         }
       },
       checkDuplicated () {

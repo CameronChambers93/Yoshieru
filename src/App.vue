@@ -1,317 +1,130 @@
 <template>
-    <div class="page-container">
-        <md-app>
+  <div id="app" style="margin-top: 0px;">
+    <md-app>
+      <md-app-toolbar class="md-medium">
+          <span style="margin-left:auto; margin-right: auto;" class="header md-display-1">Yosh!eru</span>
+      </md-app-toolbar>
 
-            <md-app-toolbar class="md-medium">
-                <span style="margin-left:auto; margin-right: auto;" class="header md-display-1">Yosh!eru</span>
-            </md-app-toolbar>
+      <md-app-content style="width:99%;">
 
-            <md-app-content style="width:99%;">
-
-                <div style="overflow: hidden;" class="md-layout md-alignment-center">
-
-                    <div class="main-layout-item md-layout-item md-medium-size-33 md-small-size-50 md-xsmall-size-100">
-                        <div class="main-md-content md-content md-elevation-10" v-if="(kuroshiro != null) && (tokenizer != null)">
-                            <dictionary-container class="custom-component-container"
-                                v-bind:previousEntry="previousEntry"
-                                v-bind:entry="this.currentEntry"
-                                v-bind:flashcardDeckNames="this.flashcardDeckNames"
-                                v-on:getPreviousEntry="getPreviousEntry()"
-                                v-bind:tokenizer="tokenizer"
-                                v-bind:kuroshiro="kuroshiro">
-                            </dictionary-container>
-                        </div>
-                    </div>
-
-                    <div class="main-layout-item md-layout-item md-medium-size-33 md-small-size-50 md-xsmall-size-100">
-                        <div class="main-md-content md-content md-elevation-10" v-if="(kuroshiro != null) && (tokenizer != null)">
-                            <flashcard-container class="custom-component-container"
-                                v-bind:sets="this.flashcardDecks"
-                                v-on:removeCardFromDeck="removeCardFromDeck()"
-                                :key="Object.keys(this.flashcardDecks).length">
-                            </flashcard-container>
-                        </div>
-                        <div v-else class="md-layout-item md-medium-size-33 md-small-size-50 md-xsmall-size-100">
-                            <h1>Loading...</h1>
-                        </div>
-                    </div>
-
-                    <div class="main-layout-item md-layout-item md-medium-size-33 md-small-size-50 md-xsmall-size-100">
-                        <div class="main-md-content md-content md-elevation-10" v-if="(kuroshiro != null) && (tokenizer != null)">
-                            <audio-container class="custom-component-container"
-                                v-on:getEntry="getEntry"
-                                v-bind:lookupsDict="lookupsDict"
-                                v-bind:tokenizer="tokenizer"
-                                v-bind:kuroshiro="kuroshiro">
-                            </audio-container>
-                        </div>
-                        <div v-else class="md-layout-item md-medium-size-33 md-small-size-50 md-xsmall-size-100">
-                        </div>
-
-                    </div>
-
-                </div>
-
-            </md-app-content>
-
-        </md-app>
-    </div>
+        
+        <div v-if="loading">
+          <h1>Loading, please wait{{ loadingDots }}</h1>
+        </div>
+        <div v-else style="overflow: hidden;" class="md-layout md-alignment-center">
+          <div class="main-layout-item md-layout-item md-medium-size-33 md-small-size-50 md-xsmall-size-100">
+              <div class="main-md-content md-content md-elevation-10">
+                  <Dictionary class="custom-component-container" />
+              </div>
+          </div>
+          <div class="main-layout-item md-layout-item md-medium-size-33 md-small-size-50 md-xsmall-size-100">
+              <div class="main-md-content md-content md-elevation-10">
+                  <Flashcards class="custom-component-container" />
+              </div>
+          </div>
+          <div class="main-layout-item md-layout-item md-medium-size-33 md-small-size-50 md-xsmall-size-100">
+              <div class="main-md-content md-content md-elevation-10">
+                  <Audio class="custom-component-container" />
+              </div>
+          </div>
+        </div>
+      </md-app-content>
+    </md-app>
+  </div>
 </template>
 
-
 <script>
-    import axios from 'axios';
-    import "regenerator-runtime/runtime";
-    import Kuroshiro from 'kuroshiro';
-    import kuromoji from "kuromoji";
-    import KuromojiAnalyzer from "kuroshiro-analyzer-kuromoji";
-    import testDeck from './assets/testCards.json'
-
-    
-    const kuroshiro = new Kuroshiro();
-    const analyzer = new KuromojiAnalyzer({ dictPath: "/public/dict/" });
-
+import { mapActions } from "vuex";
+import Dictionary from './components/Dictionary.vue'
+import Audio from './components/Audio.vue'
+import Flashcards from './components/Flashcards.vue'
 
 export default {
-    name: "App",
-
-    data () {
-        return {
-            posts: [{ent_seq: ["1562350"], k_ele: [{ keb: ["話す"], ke_pri: ["ichi1", "news1", "nf21"] }, { keb: ["咄す"] }], r_ele: [{ reb: ["はなす"], re_pri: ["ichi1", "news1", "nf21"] }], sense: [{ "pos": ["&v5s;", "&vt;"], gloss: ["to talk", "to speak", "to converse", "to chat"] }, { gloss: ["to tell", "to explain", "to narrate", "to mention", "to describe", "to discuss"] }, { gloss: ["to speak (a language)"] }]}],
-            entries: [],
-            entry: 53355,
-            endpoint: 'http://ec2-18-216-100-58.us-east-2.compute.amazonaws.com:3000/api/',
-            audio: {},
-            furiganaAudio: '',
-            computedFilepath: '',
-            currentEntry: { ent_seq: ["1562350"], k_ele: [{ keb: ["話す"], ke_pri: ["ichi1", "news1", "nf21"] }, { keb: ["咄す"] }], r_ele: [{ reb: ["はなす"], re_pri: ["ichi1", "news1", "nf21"] }], sense: [{ "pos": ["&v5s;", "&vt;"], gloss: ["to talk", "to speak", "to converse", "to chat"] }, { gloss: ["to tell", "to explain", "to narrate", "to mention", "to describe", "to discuss"] }, { gloss: ["to speak (a language)"] }] },
-            flashcardDecks: {},
-            flashcardDeckNames: [],
-            kuroshiro: null,
-            tokenizer: null,
-            entryDict: {},
-            lookupsDict: {},
-            previousEntry: "",
-            deckSelection: []   // Used to add new cards to flashcard decks
-        }
-    },
-
-    created() {
-        // Import a test deck for the flash cards
-        this.flashcardDecks['Test Deck'] = testDeck;
-        this.flashcardDeckNames.push('Test Deck');
-
-        // Set up the Kuromoji tokenizer and Kuroshiro furigana-izer
-        var promise = new Promise((resolve, reject) => {
-            async function initAnalyzer() {
-                let tokenizer = null;
-                kuromoji.builder({ dicPath: "/public/dict/" }).build(function (error, _tokenizer) {
-                    if (error != null) {
-                        console.log(error);
-                    }
-                    tokenizer = _tokenizer;
-                });
-                await kuroshiro.init(analyzer);
-                resolve(tokenizer)
-            }
-            initAnalyzer();
-        });
-
-        promise.then((result) => {
-            console.log("Analyzer Initialized (App.vue)");
-            this.tokenizer = result;
-            this.kuroshiro = kuroshiro;
-            console.log(this.kuroshiro);
-            console.log(this.tokenizer);
-        }, (err) => {
-                console.log("Analyzer Failed to Initialize");
-            });
-
-        this.$eventHub.$on('globalGetEntry', this.getEntry);
-        this.$eventHub.$on('globalUpdateLookups', this.updateLookups);
-        this.$eventHub.$on('globalCreateDeck', this.createDeck);
-        this.$eventHub.$on('globalAddCardToDeck', this.addCardToDeck);
-        this.$eventHub.$on('globalDeleteDeck', this.deleteDeck);
-    },
-
-    methods: {
-
-        updateLookups(lookup) {
-            this.lookupsDict[lookup.k_ele] = lookup.id;
-        },
-
-
-        getEntry(id) {
-            if (id != '') {
-
-                // Updates the 'previous' button text within the dictionary component
-                let tmpReading = "";
-                if (this.currentEntry != null) {
-                    if (this.currentEntry.hasOwnProperty("k_ele"))
-                        tmpReading = this.currentEntry["k_ele"][0]["keb"][0];
-                    else
-                        tmpReading = this.currentEntry["r_ele"][0]["reb"][0];
-                }
-                this.previousEntry = tmpReading;
-                    
-
-                if (this.entryDict.hasOwnProperty(id)) {
-                    this.posts.push(this.entryDict[id]["json"]);
-                }
-
-                else {
-                    axios.get(this.endpoint + 'entries/' + id)
-                        .then(response => {
-                            this.entryDict[response.data.id] = response.data;
-                            this.posts.push(response.data["json"]);
-                        })
-                        .catch(error => {
-                            console.log('-----error-------');
-                            console.log(error);
-                        })
-                }
-            }
-        },
-
-        // Updates the Dictionary component with the previous entry
-        getPreviousEntry() {
-            if (this.posts.length > 1) {
-                this.posts.pop();
-                this.getPreviousEntryReading();
-            }
-        },
-
-        // Updates the text shown in the "Previous Entry" button of the Dictionary component
-        getPreviousEntryReading() {
-            let tmpReading = "";
-            if (this.posts.length > 2) {
-                let tmpEntry = this.posts[this.posts.length - 2];
-                if (!tmpEntry.hasOwnProperty("k_ele"))
-                    tmpReading = tmpEntry["r_ele"][0]["reb"][0];
-                else
-                    tmpReading = tmpEntry["k_ele"][0]["keb"][0];
-            }
-            this.previousEntry = tmpReading;
-        },
-
-        createDeck(deckName) {
-            this.flashcardDecks[deckName] = { "name" : deckName, "deck" : [], "numCorrect": 0 };
-            this.flashcardDeckNames.push(deckName);
-        },
-
-        addCardToDeck(cardAndSelection) {
-            let selection = cardAndSelection["decks"]
-            let card = cardAndSelection["card"]
-            for (var i in selection) {
-                this.flashcardDecks[selection[i]]['deck'].push(card)
-                console.log(this.flashcardDecks[selection[i]])
-            }
-        },
-
-        removeCardFromDeck(index, deck) {
-            console.log("hello")
-            this.flashcardDecks[deck]['deck'].splice(index, 1);
-        },
-
-        deleteDeck(deck) {
-            console.log("Deleting: " + deck)
-            delete this.flashcardDecks[deck];
-        }
-    },
-
-    watch: {
-        posts: function () {
-
-            this.currentEntry = this.posts[this.posts.length - 1];
-        }
+  name: 'App',
+  computed: {
+    loadingDots() {
+      return '.....'.substring( 5 - this.dotCount )
     }
+  },
+  data() {
+    return {
+      loading: true,
+      dotCount: 0
+    }
+  },
+  components: {
+    Dictionary, Audio, Flashcards
+    },
+  methods: {
+    ...mapActions('analyzer', ["INITALIZE", "RESET", "getTokenizer"]),
+    ...mapActions('dictionary', ["INIT", "RESETDICT"]),
+    async loadingLoopDots() {
+      if (this.loading) {
+        this.dotCount = (this.dotCount + 1) % 5
+        setTimeout(this.loadingLoopDots, 1000)
+      }
+    },
+    loadingLoop() {
+      let tokenizer = this.$store.state.analyzer.tokenizer;
+      let kuroshiro = this.$store.state.analyzer.kuroshiro;
+      let idTrie = this.$store.state.dictionary.idTrie;
+      let textTrie = this.$store.state.dictionary.textTrie;
+      if (tokenizer && kuroshiro && textTrie && idTrie)
+        this.loading = false;
+      else
+        setTimeout(this.loadingLoop, 1000)
+    }
+  },
+  created() {
+    this.loadingLoopDots();
+    this.INIT();
+    this.$store.dispatch('analyzer/INITIALIZE')
+    this.loadingLoop();
+  },
+  beforeDestroy() {
+    this.RESET();
+    this.RESETDICT();
+  }
 }
 </script>
 
-<style lang="scss">
-
-    .yosh-main-col {
-
-    }
-
-    .md-app {
-    
-    }
-
-    .page-container {
-    
-    }
+<style>
+#app {
+  font-family: Avenir, Helvetica, Arial, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-align: center;
+  color: #2c3e50;
+  margin-top: 60px;
+}
 
     .main-md-content {
         border-radius: 10px;
         height: 680px;
     }
 
-    .custom-component-container{
+.main-layout-item {
+        margin-left: 5px;
+        margin-right: 5px;
+        border-radius: 10px;
+    }
+
+.custom-component-container{
         height: 100%;
         margin-top: 0px;
         background-color: grey;
         border-radius: 10px;
     }
 
-    .md-layout {
-    }
+.md-content.md-theme-default{
+  
+}
 
-    .main-layout-item {
-        margin-left: 5px;
-        margin-right: 5px;
-        border-radius: 10px;
-    }
+.dg-content {
+    color: black;
+}
 
-    .mp-app {
-        height: 1000px;
-    }
-
-    body {
-        margin: 0;
-        padding: 0;
-    }
-
-    #app {
-        font-family: 'Avenir', Helvetica, Arial, sans-serif;
-        -webkit-font-smoothing: antialiased;
-        -moz-osx-font-smoothing: grayscale;
-        color: #2c3e50;
-    }
-
-    h1, h2 {
-        font-weight: normal;
-    }
-
-    ul {
-        list-style-type: none;
-        padding: 0;
-    }
-
-    li {
-        display: inline-block;
-        margin: 0 10px;
-    }
-
-    .header {
-
-    }
-
-    main {
-        height: 800px;
-        display: flex;
-        max-width: 1200px;
-        margin-top: 10px;
-        margin-left: auto;
-        margin-right: auto;
-        overflow: auto;
-    }
-
-    .dg-content {
-        color: black;
-    }
-
-    .dg-form {
-        color: black;
-    }
+.dg-form {
+    color: black;
+}
 </style>
