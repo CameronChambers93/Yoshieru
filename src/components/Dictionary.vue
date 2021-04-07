@@ -258,7 +258,6 @@ import Sentence from './ExampleSentence.vue'
                 for (let i = 0; i < numberOfSentences; i++) {
                     axios(this.endpoint + 'sentence/?sentence_id=' + this.exampleSentenceIDs[i])
                         .then(response => {
-                            console.log(response.data)
                             this.exampleSentences.push(response.data)
                         })
                         .catch(error => {

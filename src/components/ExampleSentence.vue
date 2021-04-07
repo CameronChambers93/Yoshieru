@@ -46,7 +46,6 @@ export default {
                 let tokenList = []; // TokenList will contain an element for each word in the sentence to be analyzed
                 let tokenizer = this.$store.state.analyzer.tokenizer;
                 let textToAnalyze = this.jpn
-                console.log(textToAnalyze)
                 let tokens = tokenizer.tokenize(textToAnalyze);    // Breaks the transcription up into an array of words
                 let textTrie = this.$store.state.dictionary.textTrie;
                 let count = 0;

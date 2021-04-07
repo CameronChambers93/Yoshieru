@@ -85,8 +85,8 @@ import FuriganaComponent from './FuriganaComponent.vue';
 
         computed: {
             audioEnglish: function () {
-                if (this.audio.audioEnglish != null)
-                    return this.audio.audioEnglish
+                if (this.audio.eng_text != null)
+                    return this.audio.eng_text
                 else
                     return ''
             },
@@ -152,12 +152,10 @@ import FuriganaComponent from './FuriganaComponent.vue';
                 
                 axios(`${this.endpoint}/randomAudio/`)
                     .then(response => {
-                        console.log(response.data)
                         this.audio = response.data;
                         this.computedFilepath = "https://audio.tatoeba.org/sentences/jpn/" + response.data["jpn_id"] + '.mp3';  // This API call returns an audio stream of the specified file to be used by the mediaserver library
                         this.tokenizeThenFuriganize();
                         //this.computedFilepath = `${this.endpoint}/audio/${response.data["filename"]}`;
-                        console.log(response.data)
                         this.audioComponentCounter += 1;    // Refresh the furigana-component
 
                     })
@@ -176,7 +174,6 @@ import FuriganaComponent from './FuriganaComponent.vue';
                 let tokenList = []; // TokenList will contain an element for each word in the sentence to be analyzed
                 let tokenizer = this.$store.state.analyzer.tokenizer;
                 let textToAnalyze = this.audio['jpn_text']
-                console.log(textToAnalyze)
                 let tokens = tokenizer.tokenize(textToAnalyze);    // Breaks the transcription up into an array of words
                 let textTrie = this.$store.state.dictionary.textTrie;
                 let count = 0;
