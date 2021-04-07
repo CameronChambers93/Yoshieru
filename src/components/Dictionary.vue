@@ -4,6 +4,7 @@
             <span class="toolbar-text md-display-1" v-html="reading"></span>
         </md-content>
 
+<<<<<<< HEAD
         <md-content class="dictionary-content content md-scrollbar">
             <div style="display: flex; padding-top: .3em" v-if="entry.kanji.length != 0" class="md-headline" >
                 <div>
@@ -46,6 +47,9 @@
 
         </md-content>
         <md-dialog class="md-layout" :md-active.sync="atAddDialog">
+=======
+        <md-dialog style="max-height: 100%;" class="md-layout" :md-active.sync="atAddDialog">
+>>>>>>> dev-branch
             <md-dialog-title>Select Deck</md-dialog-title>
             <md-dialog-content>
                 <md-content style="display: flex;">
@@ -72,73 +76,46 @@
 
 
 
+        <md-content class="dictionary-content md-scrollbar">
+            <div style="margin-top:.75em;" class="md-headline" >Hiragana: {{ hiragana }}</div>
 
-        <md-dialog style="max-height: 100%;"class="md-layout" :md-active.sync="atAddDialog">
-            <md-dialog-title>Select Deck</md-dialog-title>
-            <md-dialog-content>
-                <md-content style="display: flex;">
-                    <md-content class="add-to-deck-content md-layout-item">  
-                        <div v-for='(name, index) in flashcardDeckNames' :key="index">
-                            <md-checkbox v-model="deckSelection" :value=name>{{ name }}</md-checkbox>
-                        </div>
-                        <div style="color: red; margin-top: -10px" v-if="deckSelectionError == true">Please select a deck</div>
-                    </md-content>
-                    <md-content class="add-to-deck-content md-layout-item">  
-                        <div v-for='(gloss, index) in gloss' :key='index'>
-                            <md-checkbox v-model="definitionSelection" :value=gloss >{{ index + 1 }}. {{ gloss }}</md-checkbox>
-                        </div>
-                        <div style="color: red; margin-top: -10px" v-if="definitionSelectionError == true">Please select a definition</div>
-                    </md-content>
-                </md-content>     
-            </md-dialog-content>
+            <div style="display:block; margin-top:.25em">
+                <div class="word-type-text md-headline" v-for="(text, index) of posText" :key="index">{{ text }}</div>
+            </div>
 
-            <md-dialog-actions>
-                <md-button class="md-primary" @click="closeDialog">Close</md-button>
-                <md-button class="md-primary" @click="addCardToDeck">Save</md-button>
-            </md-dialog-actions>
-        </md-dialog>
+            <div style="margin: .25em 0 .25em 0;" class="md-display-1">Definitions:</div>
+            
+            <div style="display:flex; opacity:60%; margin-bottom:.25em;" class="md-headline"  v-for='(gloss, index) in gloss' :key='index'>
+                {{ index + 1 }}.  <div style="margin-left:.25em;">{{ gloss }}</div>
+            </div>
+
+            <div style="margin-top:1em" v-if='(keb.length > 1)'>
+                Other forms:
+                <div>
+                    <div style="padding-top:.25em; opacity:60%;" class="md-display-1"  v-for='(value, index) in keb' :key='index'>
+                        {{ value }}
+                    </div>
+                </div>
+            </div>
+
+            <md-button style="margin-top:1em;" class="md-raised md-primary" v-on:click="getPreviousEntry">&lt;- {{ previousEntryName }}</md-button>
+            <md-button style="margin-top:1em; float: right;" class="to-deck-btn md-raised md-primary" v-on:click="atAddDialog = true">Add card to deck</md-button>
+        </md-content>
     </div>
 </template>
 
 <script>
-import axios from 'axios';
-import tagDict from './../assets/tagDict.json';
+    import tagDict from './../assets/tagDict.json';
+//    import tagConversions from './../assets/jpnToEngTags.json';
+import { mapActions, mapState, mapGetters, mapMutations } from 'vuex';
 
-export default {
-    props: {
-        entry: {                // The current word shown in the dictionary
-            default: () => {
-                return {
-                        
-                }
-            },
-            type: Object
-        },
-        previousEntry: {        // The previous dictionary entry, for the 'back' button
-            default: "",
-            type: String
-        },
-        tokenizer: {            // Analyzes sentences and breaks them into individual words (tokens)
-            default: () => {
-                return null
-            },
-            type: Object
-        },
-        kuroshiro: {            // Adds furigana to kanji
-            default: () => {
-                return null
-            },
-            type: Object
-        },
-        flashcardDeckNames: {   // List of deck names, for adding new cards to decks
-            default: () => {
-                return []
-            },
-            type: Array
-        }
 
-    },
+    export default {
+        props: {
+        },
+               
 
+<<<<<<< HEAD
     data() {
         return {
             endpoint: 'http://localhost:3000/api/',
@@ -152,91 +129,120 @@ export default {
             exampleSentences: [],
         }
     },
+=======
+        metaInfo() {
+            return { 
+                title: this.post && this.post.title,
+            };
+        },
+>>>>>>> dev-branch
 
-    computed: {
-        
-        // The ID of each entry corresponding to its ID in the JMDict file
-        id: () => {
-            if (this.entry == null)
-                return null
-            else
-                return this.entry.id
+        data() {
+            return {
+                entry: {
+                         id: ["1562350"], k_ele: [{ keb: ["話す"], ke_pri: ["ichi1", "news1", "nf21"] }, { keb: ["咄す"] }], r_ele: [{ reb: ["はなす"], re_pri: ["ichi1", "news1", "nf21"] }], sense: [{ "pos": ["v5s", "vt"], gloss: ["to talk", "to speak", "to converse", "to chat"] }, { gloss: ["to tell", "to explain", "to narrate", "to mention", "to describe", "to discuss"] }, { gloss: ["to speak (a language)"] },], pos: ['v5s', 'vt'], keb: [], gloss: [["to talk", "to speak", "to converse", "to chat"], ["to tell", "to explain", "to narrate", "to mention", "to describe", "to discuss"], ["to speak (a language)"]]
+                    },
+                post: {},
+                atAddDialog: false,
+                deckSelection: [],
+                deckSelectionError: false,
+                definitionSelectionError: false,
+                definitionSelection: [],
+                reading: "",
+                updateInterval: null
+            }
         },
 
-        // Gloss (glossary) is an array containing 1 or more definitions for each entry
-        gloss: function () {
-            let tmpArr = [];
-            if (this.entry["sense"] != null)
-                for (var sense of this.entry.sense) {
+        computed: {
+            ...mapState({
+                page: state => state.dictionary.page,
+                pageCounter: state => state.dictionary.pageCounter,
+            }),
+            ...mapGetters('flashcards', {
+                flashcardDeckNames: 'deckNames'
+            }),
+            ...mapGetters('dictionary', {
+                previousEntryName: 'previousEntryName'
+            }),
+            id: () => {
+                if (this.entry == null)
+                    return null
+                else
+                    return this.entry.id
+            },
+
+            // Gloss is an array containing 1 or more definitions for each entry
+            gloss: function () {
+                let tmpArr = [];
+                for (var gloss of this.entry.gloss) {
                     let msg = "";
-                    for (let i = 0; i < sense.gloss.length; i++) {
-                        msg += sense.gloss[i]['text'] + ((i < sense.gloss.length - 1) ? '; ' : '');
+                    for (let i = 0; i < gloss.length; i++) {
+                        msg += gloss[i] + ((i < gloss.length - 1) ? '; ' : '');
                     }
                     tmpArr.push(msg);
                 }
-            return tmpArr
-        },
+                return tmpArr
+            },
 
-        // The primary reading of the entry (without any kanji)
-        hiragana: function () {
-            if (this.kanji.length == 0) {
-                return ""
-            }
-            else return this.kana[0]['text']
-        },
+            // The reading of the entry without any Kanji
+            hiragana: function () {
+                return this.entry["r_ele"][0]["reb"][0]
+            },
 
-        // Readings of the current word with kanji included (for words w/o kanji, this will be an emptry array)
-        kanji: function () {
-            return this.entry["kanji"];
-        },
-
-        // Readings of the current word without kanji
-        kana: function() {
-            return this.entry['kana']
-        },
-
-        // keb is an array of alternative forms of the current entry
-        keb: function () {
-            let tmpArr = [];
-            if (this.kanji.length > 1) {
-                for (let i = 1; i < this.kanji.length; i++) {
-                    tmpArr.push(this.kanji[i]['text']);
+            // The reading of the entry with Kanji (If no Kanji is present, k_ele is equivalent to this.hiragana)
+            k_ele: function () {
+                return this.entry["k_ele"];
+            },
+            posText: function() {
+                let posText = []
+                for (let types of this.entry.pos) {
+                    let tag = types.replace(";", "");
+                    posText.push(tagDict[tag]);
                 }
-                if (this.kana.length > this.kanji.length) {
-                    for (let j = this.kanji.length; j< this.kana.length; j++) {
-                        tmpArr.push(this.kana[j]['text'])
+                return posText
+            },
+            // keb is an array of alternative forms of the current entry
+            keb: function () {
+                let tmpArr = [];
+                if (this.entry.keb.length > 0) {
+                    for (let i = 1; i < this.entry.keb.length; i++) {
+                        tmpArr.push(this.entry.keb[i]);
                     }
                 }
-            }
-            else if (this.kana.length > 1) {
-                for (let i = 1; i < this.kana.length; i++) {
-                    tmpArr.push(this.kana[i]['text'])
-                }
-            }
-            return tmpArr;
+                return tmpArr;
+            },
         },
 
-        // An array of word types (noun, verb, etc.) for each entry 
-        wordTypes: function () {
-            let tmpArr = [];
-            if (this.entry["sense"] != null) {
-                for (var types of this.entry['sense'][0]['partOfSpeech']) {
-                    let tag = types.replace(";", "");
-                    tmpArr.push({ type: tagDict[tag] });
+        methods: {
+            ...mapActions('analyzer', ["TOKENIZE", "getCurrentPage", "getCurrentPageCounter", "addFurigana"]),
+            ...mapActions('dictionary', ["getCurrentPage", "getCurrentPageCounter"]),
+            ...mapMutations('dictionary', ['getPreviousEntry']),
+            // Returns the reading of the current entry, with or without Kanji
+            getReading() {
+                if (!(this.entry.k_ele))    // If entry reading contains no kanji
+                    this.reading = this.entry["r_ele"][0]["reb"][0];  
+                else {
+                    try {
+                        this.$store.dispatch('analyzer/addFurigana', this.entry["k_ele"][0]["keb"][0]).then((result => {
+                            this.reading = result
+                        }))
+                    }
+                    catch (exception) {
+                        //tmpReading = "Error: Could not find reading"
+                        this.reading = exception;
+                    }
                 }
-            }
-            return tmpArr;
-        },
+            },
 
-        // The elements in wordTypes as a String
-        wordTypeText: function() {
-            let msg = "Word Type: "
-            if (this.wordTypes != null) {
-                for (let i = 0; i < this.wordTypes.length; i++) {
-                    msg += this.wordTypes[i].type
-                    if (i != this.wordTypes.length - 1)
-                        msg += "; "
+            // TODO: Add option for kanji/furigana
+            getNewCardContents() {
+                let back = "";
+                for (let i = 0; i < this.definitionSelection.length; i++) {
+                    back += this.definitionSelection[i];
+                    if (i < this.definitionSelection.length - 1)
+                        back += "\n";
                 }
+<<<<<<< HEAD
             }
             return msg
         }
@@ -247,9 +253,21 @@ export default {
             this.getReading();
             this.getSentenceIDs("話す")
     },
+=======
+                return {
+                    "front": this.reading,
+                    "back": back,
+                    "score": 0
+                }
+            },
+>>>>>>> dev-branch
 
-    methods: {
+            emitGlobalGetEntry(id) {
+                id == false;
+                //this.$eventHub.$emit('globalGetEntry', id)
+            },
 
+<<<<<<< HEAD
         // Returns the reading of the current entry, with or without Kanji
         getReading() {
             let tmpReading = "";
@@ -261,11 +279,17 @@ export default {
                     if (this.tokenizer != null) {
                         tmpReading = this.addFurigana([{'furigana': this.entry['kanji'][0].text, 'index': 0, 'tokenId': ''}]);
                     }
+=======
+            addCardToDeck() {
+                this.newCardContents = this.getNewCardContents();
+                if (this.deckSelection.length == 0) {
+                    this.deckSelectionError = true;
+>>>>>>> dev-branch
                 }
-                catch (exception) {
-                    //tmpReading = "Error: Could not find reading"
-                    tmpReading = exception;
+                else if (this.definitionSelection.length == 0) {
+                    this.definitionSelectionError = true;
                 }
+<<<<<<< HEAD
             }
             if (tmpReading != undefined) {
                 this.reading = tmpReading;
@@ -308,52 +332,35 @@ export default {
 
             }
         },
+=======
+                else {
+                    this.$store.commit('flashcards/addCardToDeck', 
+                        {   "deckNames": this.deckSelection,
+                            "card": this.newCardContents
+                        });
+                    this.definitionSelection = []
+                    this.deckSelectionError = false;
+                    this.closeDialog();
+                }
+            },
+>>>>>>> dev-branch
 
-        /* Returns the card contents when creating new flashcards
-        *  TODO: Add option for kanji/furigana
-        */
-        getNewCardContents() {
-            let back = "";
-            for (let i = 0; i < this.definitionSelection.length; i++) {
-                back += this.definitionSelection[i];
-                if (i < this.definitionSelection.length - 1)
-                    back += "\n";
-            }
-            return {
-                "front": this.getReading(),
-                "back": back
-            }
-        },
-
-        /* To lookup the definition of a new word.
-        *  Will be used when support for 'example sentences' is added
-        */
-        emitGlobalGetEntry(id) {
-            this.$eventHub.$emit('globalGetEntry', id)
-        },
-
-        /* Adds new flashcard with specified definition to specified decks
-        */
-        addCardToDeck() {
-            this.newCardContents = this.getNewCardContents();
-            if (this.deckSelection.length == 0) {
-                this.deckSelectionError = true;
-            }
-            else if (this.definitionSelection.length == 0) {
-                this.definitionSelectionError = true;
-            }
-            else {
-                this.$eventHub.$emit('globalAddCardToDeck', 
-                    {
-                        "decks": this.deckSelection,
-                        "card": this.newCardContents
-                    });
-                this.definitionSelection = []
+            closeDialog() {
                 this.deckSelectionError = false;
-                this.closeDialog();
+                this.atAddDialog = false;
             }
+            
+        },
+        beforeDestroy() {
+            clearInterval(this.updateInterval)
+        },
+        created() {
+            this.getReading();
+            //this.$eventHub.$emit('globalGetEntry', 1562350)
+
         },
 
+<<<<<<< HEAD
         /* To close the 'add to deck' dialog. Will be replaced with modal in the future
         */
         closeDialog() {
@@ -403,8 +410,17 @@ export default {
             }
             this.getReading();
         },
+=======
+        watch: {
+            page: function(newVal) {
+                this.entry = newVal[0]
+            },
+            entry: function () {
+                this.getReading();
+            },
+        }
+>>>>>>> dev-branch
     }
-}
 </script>
 
 <style lang="scss" scoped>
@@ -412,7 +428,7 @@ export default {
     .dictionary-content{
         margin-left: auto;
         margin-right: auto;
-        background-color: grey;
+        background-color: grey !important;
         height: 595px;
         padding: 0px 10px 0px 10px;
         overflow: auto;
@@ -426,7 +442,7 @@ export default {
     .toolbar {
         display: flex;
         height: 80px;
-        background-color: darkolivegreen;
+        background-color: darkolivegreen !important;
         text-align: center;
         border-radius: 10px 10px 0px 0px;
         align-items: center;
@@ -435,8 +451,7 @@ export default {
 
     .word-type-text {
         font-size: medium;
-        opacity: 60%;
-        
+        opacity: 60% !important;
     }
 
     .add-to-deck-content {

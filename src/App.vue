@@ -1,77 +1,46 @@
 <template>
-    <div class="page-container">
-        <md-app>
+  <div id="app" style="margin-top: 0px;">
+    <md-app>
+      <md-app-toolbar class="md-medium">
+          <span style="margin-left:auto; margin-right: auto;" class="header md-display-1">Yosh!eru</span>
+      </md-app-toolbar>
 
-            <md-app-toolbar class="md-medium">
-                <span style="margin-left:auto; margin-right: auto;" class="header md-display-1">Yosh!eru</span>
-            </md-app-toolbar>
+      <md-app-content style="width:99%;">
 
-            <md-app-content style="width:99%;">
-
-                <div style="overflow: hidden;" class="md-layout md-alignment-center">
-
-                    <div class="main-layout-item md-layout-item md-medium-size-33 md-small-size-50 md-xsmall-size-100">
-                        <div class="main-md-content md-content md-elevation-10" v-if="(kuroshiro != null) && (tokenizer != null)">
-                            <dictionary-container class="custom-component-container"
-                                v-bind:previousEntry="previousEntry"
-                                v-bind:entry="this.currentEntry"
-                                v-bind:flashcardDeckNames="this.flashcardDeckNames"
-                                v-on:getPreviousEntry="getPreviousEntry()"
-                                v-bind:tokenizer="tokenizer"
-                                v-bind:kuroshiro="kuroshiro">
-                            </dictionary-container>
-                        </div>
-                    </div>
-
-                    <div class="main-layout-item md-layout-item md-medium-size-33 md-small-size-50 md-xsmall-size-100">
-                        <div class="main-md-content md-content md-elevation-10" v-if="(kuroshiro != null) && (tokenizer != null)">
-                            <flashcard-container class="custom-component-container"
-                                v-bind:decks="this.flashcardDecks"
-                                v-on:removeCardFromDeck="removeCardFromDeck()"
-                                :key="Object.keys(this.flashcardDecks).length">
-                            </flashcard-container>
-                        </div>
-                        <div v-else class="md-layout-item md-medium-size-33 md-small-size-50 md-xsmall-size-100">
-                            <h1>Loading...</h1>
-                        </div>
-                    </div>
-
-                    <div class="main-layout-item md-layout-item md-medium-size-33 md-small-size-50 md-xsmall-size-100">
-                        <div class="main-md-content md-content md-elevation-10" v-if="(kuroshiro != null) && (tokenizer != null)">
-                            <audio-container class="custom-component-container"
-                                v-on:getEntry="getEntry"
-                                v-bind:lookupsDict="lookupsDict"
-                                v-bind:tokenizer="tokenizer"
-                                v-bind:kuroshiro="kuroshiro">
-                            </audio-container>
-                        </div>
-                        <div v-else class="md-layout-item md-medium-size-33 md-small-size-50 md-xsmall-size-100">
-                        </div>
-
-                    </div>
-
-                </div>
-
-            </md-app-content>
-
-        </md-app>
-    </div>
+        
+        <div v-if="loading">
+          <h1>Loading, please wait{{ loadingDots }}</h1>
+        </div>
+        <div v-else style="overflow: hidden;" class="md-layout md-alignment-center">
+          <div class="main-layout-item md-layout-item md-medium-size-33 md-small-size-50 md-xsmall-size-100">
+              <div class="main-md-content md-content md-elevation-10">
+                  <Dictionary class="custom-component-container" />
+              </div>
+          </div>
+          <div class="main-layout-item md-layout-item md-medium-size-33 md-small-size-50 md-xsmall-size-100">
+              <div class="main-md-content md-content md-elevation-10">
+                  <Flashcards class="custom-component-container" />
+              </div>
+          </div>
+          <div class="main-layout-item md-layout-item md-medium-size-33 md-small-size-50 md-xsmall-size-100">
+              <div class="main-md-content md-content md-elevation-10">
+                  <Audio class="custom-component-container" />
+              </div>
+          </div>
+        </div>
+      </md-app-content>
+    </md-app>
+  </div>
 </template>
 
-
 <script>
-    import axios from 'axios';
-    import "regenerator-runtime/runtime";
-    import Kuroshiro from 'kuroshiro';
-    import kuromoji from "kuromoji";
-    import KuromojiAnalyzer from "kuroshiro-analyzer-kuromoji";
-    import testDeck from './assets/testCards.json'
-
-    const kuroshiro = new Kuroshiro();
-    const analyzer = new KuromojiAnalyzer({ dictPath: "/public/dict/" });
-
+import { mapActions } from "vuex";
+import Dictionary from './components/Dictionary.vue'
+import Audio from './components/Audio.vue'
+import Flashcards from './components/Flashcards.vue'
 
 export default {
+<<<<<<< HEAD
     name: "App",       
 
     metaInfo() {
@@ -139,189 +108,93 @@ export default {
         this.$eventHub.$on('globalCreateDeck', this.createDeck);
         this.$eventHub.$on('globalAddCardToDeck', this.addCardToDeck);
         this.$eventHub.$on('globalDeleteDeck', this.deleteDeck);
-    },
-
-    methods: {
-        /* For future caching use
-        */
-        updateLookups(lookup) {
-            this.$set(this.lookupsDict, lookup.k_ele, lookup.id);
-        },
-
-        /* Updates the current entry in the Dictionary component
-        */
-        getEntry(id) {
-            if (id != '') {
-                let tmpReading = "";                                            // Updates the 'previous' button text
-                if (this.currentEntry.hasOwnProperty("kanji"))
-                    tmpReading = this.currentEntry['kana'][0]['text'];
-                else
-                    tmpReading = this.currentEntry['kanji'][0]['text'];
-                this.previousEntry = tmpReading
-
-                if (this.entryDict.hasOwnProperty(id)) {                        // Checks if entry has already been cached
-                    this.posts.push(this.entryDict[id]);
-                }
-                else {
-                    axios.get(this.endpoint + 'entries/?entryId=' + id)         // API call to get new entry
-                        .then(response => {
-                            this.$set(this.entryDict, response.data.id, response.data);
-                            this.posts.push(response.data);
-                        })
-                        .catch(error => {
-                            console.log('-----error-------');
-                            console.log(error);
-                        })
-                }
-            }
-        },
-
-        // Updates the Dictionary component with the previous entry
-        getPreviousEntry() {
-            if (this.posts.length > 1) {
-                this.posts.pop();
-                this.getPreviousEntryReading();
-            }
-        },
-
-        // Updates the text shown in the "Previous Entry" button of the Dictionary component
-        getPreviousEntryReading() {
-            let tmpReading = "";
-            if (this.posts.length > 2) {
-                let tmpEntry = this.posts[this.posts.length - 2];
-                if (!tmpEntry.hasOwnProperty("k_ele"))
-                    tmpReading = tmpEntry["kana"][0]["text"];
-                else
-                    tmpReading = tmpEntry["kanji"][0]["text"];
-            }
-            this.previousEntry = tmpReading;
-        },
-
-        /*  Creates new flashcard deck with name 'deckName'
-        */
-        createDeck(deckName) {
-            this.$set(this.flashcardDecks, deckName, { "name" : deckName, "deck" : [], "numCorrect": 0 });
-        },
-
-        /*  Adds new flashcard to specified deck(s)
-            cardAndSelection: {
-                decks: Array of deck names to which the new card will be added
-                card: Contents of the new card
-            }
-        */
-        addCardToDeck(cardAndSelection) {
-            let selection = cardAndSelection.decks
-            let card = cardAndSelection.card
-            for (var i in selection) {
-                this.flashcardDecks[selection[i]]['deck'].push(card)
-            }
-        },
-
-        /* Removes card at position 'index' from deck with name 'deckName'
-        */
-        removeCardFromDeck(index, deckName) {
-            this.flashcardDecks[deckName].deck.splice(index, 1);
-        },
-
-        /* Deletes specified deck
-        */
-        deleteDeck(deck) {
-            delete this.flashcardDecks[deck];
-        }
-    },
-
-    watch: {
-        posts: function () {
-            this.currentEntry = this.posts[this.posts.length - 1];      // Updates the current entry when a new word is defined
-        }
+=======
+  name: 'App',
+  computed: {
+    loadingDots() {
+      return '.....'.substring( 5 - this.dotCount )
     }
+  },
+  data() {
+    return {
+      loading: true,
+      dotCount: 0
+    }
+  },
+  components: {
+    Dictionary, Audio, Flashcards
+>>>>>>> dev-branch
+    },
+  methods: {
+    ...mapActions('analyzer', ["INITALIZE", "RESET", "getTokenizer"]),
+    ...mapActions('dictionary', ["INIT", "RESETDICT"]),
+    async loadingLoopDots() {
+      if (this.loading) {
+        this.dotCount = (this.dotCount + 1) % 5
+        setTimeout(this.loadingLoopDots, 1000)
+      }
+    },
+    loadingLoop() {
+      let tokenizer = this.$store.state.analyzer.tokenizer;
+      let kuroshiro = this.$store.state.analyzer.kuroshiro;
+      let idTrie = this.$store.state.dictionary.idTrie;
+      let textTrie = this.$store.state.dictionary.textTrie;
+      if (tokenizer && kuroshiro && textTrie && idTrie)
+        this.loading = false;
+      else
+        setTimeout(this.loadingLoop, 1000)
+    }
+  },
+  created() {
+    this.loadingLoopDots();
+    this.INIT();
+    this.$store.dispatch('analyzer/INITIALIZE')
+    this.loadingLoop();
+  },
+  beforeDestroy() {
+    this.RESET();
+    this.RESETDICT();
+  }
 }
 </script>
 
-<style lang="scss">
-
-    .yosh-main-col {
-
-    }
-
-    .md-app {
-    
-    }
-
-    .page-container {
-    
-    }
+<style>
+#app {
+  font-family: Avenir, Helvetica, Arial, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-align: center;
+  color: #2c3e50;
+  margin-top: 60px;
+}
 
     .main-md-content {
         border-radius: 10px;
         height: 680px;
     }
 
-    .custom-component-container{
+.main-layout-item {
+        margin-left: 5px;
+        margin-right: 5px;
+        border-radius: 10px;
+    }
+
+.custom-component-container{
         height: 100%;
         margin-top: 0px;
         background-color: grey;
         border-radius: 10px;
     }
 
-    .md-layout {
-    }
+.md-content.md-theme-default{
+  
+}
 
-    .main-layout-item {
-        margin-left: 5px;
-        margin-right: 5px;
-        border-radius: 10px;
-    }
+.dg-content {
+    color: black;
+}
 
-    .mp-app {
-        height: 1000px;
-    }
-
-    body {
-        margin: 0;
-        padding: 0;
-    }
-
-    #app {
-        font-family: 'Avenir', Helvetica, Arial, sans-serif;
-        -webkit-font-smoothing: antialiased;
-        -moz-osx-font-smoothing: grayscale;
-        color: #2c3e50;
-    }
-
-    h1, h2 {
-        font-weight: normal;
-    }
-
-    ul {
-        list-style-type: none;
-        padding: 0;
-    }
-
-    li {
-        display: inline-block;
-        margin: 0 10px;
-    }
-
-    .header {
-
-    }
-
-    main {
-        height: 800px;
-        display: flex;
-        max-width: 1200px;
-        margin-top: 10px;
-        margin-left: auto;
-        margin-right: auto;
-        overflow: auto;
-    }
-
-    .dg-content {
-        color: black;
-    }
-
-    .dg-form {
-        color: black;
-    }
+.dg-form {
+    color: black;
+}
 </style>

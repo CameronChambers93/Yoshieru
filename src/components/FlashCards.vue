@@ -1,25 +1,25 @@
 <template>
     <div>
         <md-content class="toolbar">
-            <div v-if="currentDeck == ''" class="md-headline">
+            <div v-if="!currentDeck.deck" class="md-headline">
                 <span class="md-headline">Select a Deck</span>
             </div>
             <div v-else class="md-headline">
                 <md-button class="md-default" @click="toMenu" style="float:left">Menu</md-button>
-                <span class="md-headline">{{ decks[currentDeck]['deck'].length - unpassedCards }}  |  {{ unpassedCards }}</span>
+                <span class="md-headline">{{ currentDeck.numCorrect }}  |  {{ unpassedCards }}</span>
                 <md-button class="md-default" @click="atDeckSettings = true"><md-icon>settings</md-icon></md-button>
             </div>
         </md-content>
         
         <md-drawer :md-active.sync="atDeckSettings">
             <md-toolbar class="md-transparent" md-elevation="1">
-                <span class="md-title">{{ currentDeck }}</span>
+                <span class="md-title">{{ currentDeck.name }}</span>
             </md-toolbar>
 
             <md-list v-if="atDeckSettings == true">
-                <md-list-item v-for="(card, index) in decks[currentDeck]['deck']" :key=index>
+                <md-list-item v-for="(card, index) in currentDeck['deck']" :key=index>
                     {{ card['front'] }}
-                    <md-button class="md-default" @click="$emit('removeCardFromDeck', (index, currentDeck))">
+                    <md-button class="md-default" @click="removeCardFromDeck(index)">
                         <md-icon>delete_forever</md-icon>
                     </md-button>
                 </md-list-item>
@@ -45,17 +45,17 @@
             </md-dialog-actions>
         </md-dialog>
         
-        <md-content v-if="currentDeck == ''" class="innerContent md-scrollbar" style="height: 595px; background-color: grey">
+        <md-content v-if="!currentDeck.deck" class="innerContent md-scrollbar" style="height: 595px; background-color: grey">
                 <div style="display:block" v-for="(index, deck) in this.decks" :key="deck">
                     <div style="display:flex; width:100%" class="md-headline">
-                        <md-button class="md-raised md-primary" @click="setcurrentDeck(deck)">{{ deck }}</md-button>
+                        <md-button class="md-raised md-primary" @click="setCurrentDeck(deck)">{{ deck }}</md-button>
                         <div style="display:flex; width:100%; justify-content:flex-end; padding-right:.25em">
                             <div style="color:green;">
-                                {{ decks[deck]["deck"].length - decks[deck]["numCorrect"] }}
+                                {{ decks[deck]["numCorrect"] }}
                             </div>
                             &emsp;
                             <div style="color:red">
-                                {{ decks[deck]["numCorrect"] }}
+                                {{ decks[deck]["deck"].length - decks[deck]["numCorrect"] }}
                             </div>
 
                             <md-button class="md-default" @click="deleteDeck(deck)">
@@ -70,11 +70,11 @@
         <md-content v-else class="innerContent md-scrollbar" style="height: 595px; padding: 0px 10px 0px 10px; overflow: auto; background-color: grey">
             <div @click="revealCard">
                 <div class="card">
-                    <flashcard-component :html="currentFront" style="font-size:24px; width:100%" :key="furiganaCounter"></flashcard-component>
+                    <flashcard-component :_html="currentFront" style="font-size:24px; width:100%" :key="furiganaCounter"></flashcard-component>
                 </div>
 
                 <div v-if="this.isBackShown == true" class="card">
-                    <flashcard-component v-bind:html="currentBack" style="font-size:24px; width:100%" :key="furiganaCounter"></flashcard-component>
+                    <flashcard-component v-bind:_html="currentBack" style="font-size:24px; width:100%" :key="furiganaCounter"></flashcard-component>
                 </div>
 
                 <div v-else style="opacity:50%" class="card">
@@ -94,6 +94,8 @@
 </template>
 
 <script>
+import { mapState, mapMutations, mapActions, mapGetters } from 'vuex';
+import FlashCardComponent from './FlashcardComponent'
     export default {
         props: {
 
@@ -106,32 +108,28 @@
             *    ],
             * 'numCorrect': number
             */
-            decks: {
-                default: null,
-                type: Object
-            }
         },
 
         data() {
             return {
-                currentDeck: "",
                 isBackShown: false,
                 furiganaCounter: 10,
                 cardCounter: 0,
                 currentFront: "",
                 currentBack: "",
-                unpassedCards: 0,
                 atCreateDialog: false,
                 atDeckSettings: false,
                 deckName: "",
                 nameError: false
             }
         },
-
+        components: {
+            'flashcard-component': FlashCardComponent
+        },
         watch: {
             cardCounter: function () {
-                this.currentFront = this.decks[this.currentDeck]['deck'][0]['front'];
-                this.currentBack = this.decks[this.currentDeck]['deck'][0]['back'];
+                this.currentFront = this.currentDeck['deck'][0]['front'];
+                this.currentBack = this.currentDeck['deck'][0]['back'];
             },
 
             // Resets the error dialog when creating a deck
@@ -144,18 +142,41 @@
 
         },
 
+        validations: {
+            form: {
+                deckName: {
+                    required: true,
+                    minLength: 2
+                }
+            }
+        },
+        computed: {
+            ...mapState({
+                decks: state => state.flashcards.decks,
+                currentDeck: state => state.flashcards.currentDeck,
+            }),
+            ...mapGetters('flashcards', {
+                deckNames: 'deckNames'
+            }),
+            unpassedCards: function() {
+                if (this.currentDeck.deck)
+                    return this.currentDeck.deck.length - this.currentDeck.numCorrect;
+                else
+                    return -1
+            }
+        },
         methods: {
-
+            ...mapMutations('flashcards', ['setCurrentDeck', 'toMenu', 'removeCardFromDeck', 'deleteDeck']),
+            ...mapActions('flashcards', ['answerCorrect', 'answerWrong']),
             // Reveals the answer to the current card. Replaces flipCard for the card body itself
             revealCard() {
                 this.isBackShown = true;
             },
 
-            // Sets the current deck to one selected by user
-            setcurrentDeck(deck) {
+            // Sets the current set to one selected by user
+            setCurrentDeck(deck) {
                 this.isBackShown = true;
-                this.currentDeck = deck;
-                this.unpassedCards = this.decks[deck]['deck'].length;
+                this.$store.commit('flashcards/setCurrentDeck', deck)
                 this.isBackShown = false;
                 this.cardCounter += 1;
             },
@@ -165,11 +186,9 @@
                 this.isBackShown = !this.isBackShown;
             },
 
-            // Primitive method to move the current card to the end of the current set
+            // Primitive method to move the current card to the end of the current deck
             answerCorrect() {
-                this.isBackShown = true;
-                this.adjustScore("Passed");
-                this.decks[this.currentDeck]['deck'].push(this.decks[this.currentDeck]['deck'].shift());    // Moves first card to end of deck
+                this.$store.dispatch('flashcards/answerCorrect', this.currentDeck.name)
                 this.isBackShown = false;
                 this.cardCounter += 1;
             },
@@ -179,42 +198,14 @@
              */
             answerWrong() {
                 this.isBackShown = true;
-
-                this.adjustScore("Failed");
-
-                let x = this.decks[this.currentDeck]['deck'].length;
-                if (x < 12)
-                    x = x / 3;
-                let tempCard = this.decks[this.currentDeck]['deck'].shift();
-                this.decks[this.currentDeck]['deck'].splice(x, 0, tempCard);  
+                this.$store.dispatch('flashcards/answerWrong', this.currentDeck.name)
                 this.isBackShown = false;
                 this.cardCounter += 1;
             },
 
-            /*  Adjusts the score of the current card after the user attempts an answer
-             *  
-             *  Currently implemented as a binary pass/fail, will use a more advanced method in the future
-             */
-            adjustScore(result) {
-                if (result == "Failed") {
-                    if (this.decks[this.currentDeck]['deck'][0]['score'] == 1) {  // If card was previously marked 'Passed', mark it 'Failed' and adjust the score accordingly
-                        this.decks[this.currentDeck]['deck'][0]['score'] = 0;
-                        if (this.unpassedCards <= this.decks[this.currentDeck].length)
-                            this.unpassedCards += 1;
-                    }
-                }
-                else if (result == "Passed") {
-                    if (this.decks[this.currentDeck]['deck'][0]['score'] == 0) {  // If card was previously marked 'Failed', mark it 'Passed' and adjust the score accordingly
-                        this.decks[this.currentDeck]['deck'][0]['score'] = 1;
-                        if (this.unpassedCards > 0)
-                            this.unpassedCards -= 1;
-                    }
-                }
-            },
-
             // Takes the user to the deck selection menu
             toMenu() {
-                this.currentDeck = "";
+                this.$store.commit('flashcards/toMenu');
             
             },
 
@@ -223,14 +214,13 @@
                     this.nameError = true;
                 }
                 else {
-                    this.$eventHub.$emit('globalCreateDeck', this.deckName);
+                    this.$store.commit('flashcards/createDeck', this.deckName);
                     this.deckName = "";
                     this.atCreateDialog = false;
                 }
             },
 
             deleteDeck(deck) {
-                
                 let message = "Are you sure you want to delete " + deck + "?";
 
                 let options = {
@@ -247,7 +237,7 @@
 
                 this.$dialog.confirm(message, options)
                     .then( () => {
-                        this.$eventHub.$emit('globalDeleteDeck', deck)
+                        this.$store.commit('flashcards/deleteDeck', deck)
                         this.atCreateDialog = true;
                         this.atCreateDialog = false;
                     })
@@ -279,7 +269,7 @@
     .toolbar {
         display: flex;
         height: 80px;
-        background-color: darkolivegreen;
+        background-color: darkolivegreen !important;
         text-align: center;
         border-radius: 10px 10px 0px 0px;
         align-items: center;
