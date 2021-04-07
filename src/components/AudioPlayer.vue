@@ -11,7 +11,7 @@
 
 export default {
     props: {
-        filepath: {
+        filepath: {         // Contains the URL to a specified audio clip
             default: '',
             type: String
         }
@@ -22,6 +22,4 @@ export default {
 
 <style lang="scss" scoped>
 
-    .audio-player {
-    }
 </style>

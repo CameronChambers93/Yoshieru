@@ -97,8 +97,6 @@ class IdTrie{
 const tries = (JMDict) => {
     let textTrie = new TextTrie();
     let idTrie = new IdTrie();
-    
-    console.log(JMDict)
     for (const entry of JMDict) {
         let id = entry["ent_seq"][0]
         

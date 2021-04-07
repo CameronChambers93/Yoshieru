@@ -104,7 +104,7 @@ import FlashCardComponent from './FlashcardComponent'
             * 'deck': [
             *     'front': string,
             *     'back': string,
-            *     'score': number
+            *     'score': number       
             *    ],
             * 'numCorrect': number
             */

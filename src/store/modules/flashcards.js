@@ -85,7 +85,6 @@ const state = () => ({
       }
     },
     deleteDeck(state, deckName) {
-      console.log(deckName)
       delete state.decks[deckName]
       state.decks = Object.assign({}, state.decks)
     }

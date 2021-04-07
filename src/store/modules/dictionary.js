@@ -66,9 +66,7 @@ const state = () => ({
       INIT({ commit }) {
         return new Promise((resolve) => {
           axios(`http://ec2-100-25-211-104.compute-1.amazonaws.com:5000/api/getJMDict`).then(result => {
-            console.log('tries s')
             let [textTrie, idTrie] = tries(result.data.message)
-            console.log('tries e')
             let tmp = ["1562350"]
             commit('init_define', { ids: tmp, textTrie: textTrie, idTrie: idTrie })
             //commit('define',  {ids: tmp} )

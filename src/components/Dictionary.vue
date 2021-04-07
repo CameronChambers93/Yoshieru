@@ -195,7 +195,6 @@ import { mapActions, mapState, mapGetters, mapMutations } from 'vuex';
 
             addCardToDeck() {
                 this.newCardContents = this.getNewCardContents();
-                console.log(this.deckSelection, this.newCardContents)
                 if (this.deckSelection.length == 0) {
                     this.deckSelectionError = true;
                 }

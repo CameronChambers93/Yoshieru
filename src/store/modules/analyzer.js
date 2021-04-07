@@ -30,16 +30,10 @@ const state = () => ({
     },
       INITIALIZE({ commit }) {
         return new Promise(resolve => {
-          console.log('kuroshiro s')
           let kuroshiro = new Kuroshiro();
-          console.log('kuroshiro e')
-          console.log('analyzer s')
           let analyzer = new KuromojiAnalyzer({dictPath: "./dict/"});
-          console.log('analyzer e')
           let promise = new Promise(resolve => {
-            console.log('init s')
             kuroshiro.init(analyzer).then(() => {
-              console.log('init e')
               resolve()
             })
           });
