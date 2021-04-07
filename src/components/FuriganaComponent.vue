@@ -1,6 +1,6 @@
 <template>
     <div>
-        <a style="color: black; font-size: 30px; line-height: 36px;" 
+        <a :style="_style"
             v-for="(token, key) in tokens"
             v-bind:key='key'
             v-on:click="emitGlobalGetEntry( token.ids )"
@@ -14,6 +14,16 @@ import { mapActions } from 'vuex'
 
     export default {
         props: {
+            _style: {
+                default: () => { 
+                    return {
+                        'color': 'black',
+                        'font-size': '30px',
+                        'line-height': '36px',
+                    }
+                },
+                type: Object
+            },
             tokens: {
                 default: () => {return []},
                 type: Array

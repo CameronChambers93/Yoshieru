@@ -37,78 +37,9 @@
 import { mapActions } from "vuex";
 import Dictionary from './components/Dictionary.vue'
 import Audio from './components/Audio.vue'
-import Flashcards from './components/Flashcards.vue'
+import Flashcards from './components/FlashCards.vue'
 
 export default {
-<<<<<<< HEAD
-    name: "App",       
-
-    metaInfo() {
-        return { 
-            title: "Yoshieru - Japanese Study Tool",
-        };
-    },
-
-    data () {
-        return {
-            posts: [],                  // A stack of words the user has looked up, to act as a 'history' feature
-            endpoint: 'http://ec2-3-129-62-182.us-east-2.compute.amazonaws.com:3000/api/',      // API endpoint
-            currentEntry: {},           // The word currently being defined
-            flashcardDecks: {},         // Contains the flashcard decks
-            kuroshiro: null,            // For adding furigana
-            tokenizer: null,            // For splitting sentences into individual words (tokens)
-            entryDict: {},              // For caching definitions
-            lookupsDict: {},            // For caching searches
-            previousEntry: "",          // Text displayed in the 'back' button in the Dictionary
-            deckSelection: []           // Used to add new cards to flashcard decks
-        }
-    },
-
-    computed: {
-        
-        flashcardDeckNames: function() {
-            return Object.keys(this.flashcardDecks)
-        }
-    },
-
-    created() {
-        // Initiate a placeholder definition in the Dictionary
-        this.posts.push({"id":"1562350","kanji":[{"common":true,"text":"話す","tags":[]},{"common":false,"text":"咄す","tags":[]}],"kana":[{"common":true,"text":"はなす","tags":[],"appliesToKanji":["*"]}],"sense":[{"partOfSpeech":["v5s","vt"],"appliesToKanji":["*"],"appliesToKana":["*"],"related":[],"antonym":[],"field":[],"dialect":[],"misc":[],"info":[],"languageSource":[],"gloss":[{"type":null,"lang":"eng","text":"to talk"},{"type":null,"lang":"eng","text":"to speak"},{"type":null,"lang":"eng","text":"to converse"},{"type":null,"lang":"eng","text":"to chat"}]},{"partOfSpeech":["v5s","vt"],"appliesToKanji":["*"],"appliesToKana":["*"],"related":[],"antonym":[],"field":[],"dialect":[],"misc":[],"info":[],"languageSource":[],"gloss":[{"type":null,"lang":"eng","text":"to tell"},{"type":null,"lang":"eng","text":"to explain"},{"type":null,"lang":"eng","text":"to narrate"},{"type":null,"lang":"eng","text":"to mention"},{"type":null,"lang":"eng","text":"to describe"},{"type":null,"lang":"eng","text":"to discuss"}]},{"partOfSpeech":["v5s","vt"],"appliesToKanji":["*"],"appliesToKana":["*"],"related":[],"antonym":[],"field":[],"dialect":[],"misc":[],"info":[],"languageSource":[],"gloss":[{"type":null,"lang":"eng","text":"to speak (a language)"}]}]})
-
-        // Import a test deck for the flash cards
-        this.flashcardDecks['Test Deck'] = testDeck;
-
-        // Set up the Kuromoji tokenizer and Kuroshiro furigana-izer
-        var promise = new Promise((resolve, reject) => {
-            async function initAnalyzer() {
-                let tokenizer = null;
-                kuromoji.builder({ dicPath: "/public/dict/" }).build(function (error, _tokenizer) {
-                    if (error != null) {
-                        console.log(error);
-                    }
-                    tokenizer = _tokenizer;
-                });
-                await kuroshiro.init(analyzer);
-                resolve(tokenizer)
-            }
-            initAnalyzer();
-        });
-
-
-        promise.then((result) => {
-            console.log("Analyzer Initialized (App.vue)");
-            this.tokenizer = result;
-            this.kuroshiro = kuroshiro;
-        }, (err) => {
-                console.log("Analyzer Failed to Initialize");
-            });
-
-        this.$eventHub.$on('globalGetEntry', this.getEntry);
-        this.$eventHub.$on('globalUpdateLookups', this.updateLookups);
-        this.$eventHub.$on('globalCreateDeck', this.createDeck);
-        this.$eventHub.$on('globalAddCardToDeck', this.addCardToDeck);
-        this.$eventHub.$on('globalDeleteDeck', this.deleteDeck);
-=======
   name: 'App',
   computed: {
     loadingDots() {
@@ -123,7 +54,6 @@ export default {
   },
   components: {
     Dictionary, Audio, Flashcards
->>>>>>> dev-branch
     },
   methods: {
     ...mapActions('analyzer', ["INITALIZE", "RESET", "getTokenizer"]),

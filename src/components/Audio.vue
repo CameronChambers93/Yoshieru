@@ -49,9 +49,6 @@ import FuriganaComponent from './FuriganaComponent.vue';
             }
         },
         created () {
-<<<<<<< HEAD
-            this.getAudio()
-=======
             /*
             this.tokenizer = this.$store.state.analyzer.tokenizer;
             this.kuroshiro = this.$store.state.analyzer.kuroshiro;
@@ -71,20 +68,13 @@ import FuriganaComponent from './FuriganaComponent.vue';
             }
             */
             this.tokenizeThenFuriganize();
->>>>>>> dev-branch
         },
 
         data() {
             return {
-<<<<<<< HEAD
-                endpoint: 'http://ec2-3-129-62-182.us-east-2.compute.amazonaws.com:3000/api/',
-                audio: {},
-                computedFilepath: '',
-=======
                 endpoint: 'http://ec2-100-25-211-104.compute-1.amazonaws.com:5000/api',
                 audio: {audioEnglish: "The meeting will end at 4 o'clock.", audioKana: "かいぎ は 4 とき に おわります", audioKanji: "会議は4時に終わります", createdAt: "2019-08-03T14:00:04.000Z", filename: "e21548c3fc117238b1594acfecf28fb4.mp3", id: 75, updatedAt: "2019-08-03T14:00:04.000Z"},
                 computedFilepath: 'http://ec2-100-25-211-104.compute-1.amazonaws.com:5000/api/audio/13cc999f59e4b379f17239fca629bf2f.mp3',
->>>>>>> dev-branch
                 audioComponentCounter: 0,   // Used to refresh the furigana-component in order to refresh the audio file
                 tokenList: [],  // Array containing transcription of current audio file, with furigana and links to corresponding entries. Passed to furigana-component
                 isInputShown: true, // Used to flip between question and answer
@@ -94,41 +84,6 @@ import FuriganaComponent from './FuriganaComponent.vue';
         },
 
         computed: {
-<<<<<<< HEAD
-            audioEnglish: function () {                 // English transcription of the current audio sample
-                if (this.audio.eng_text != null)
-                    return this.audio.eng_text
-            },
-            audioKana: function () {                    // Japanese transcription of the current audio sample
-                if (this.audio.jpn_text != null)
-                    return this.audio.jpn_text
-            },
-            audioAuthor: function() {
-                if (this.audio.author != null) {
-                    return this.audio.author
-                }
-            },
-            licenseType: function() {
-                if (this.audio.license_type != null) {
-                    if (this.audio.license_type != '\\N') {
-                        return this.audio.license_type
-                    }
-                    else {
-                        return 'CC'
-                    }
-                }
-            },
-            licenseLink: function() {
-                const default_link_base = 'https://tatoeba.org/eng/user/profile/'
-                if (this.audio.license_link != null) {
-                    if (this.audio.license_link == '\\N') {
-                        return default_link_base + this.audio.author
-                    }
-                    else {
-                        return this.audio.license_link
-                    }
-                }
-=======
             audioEnglish: function () {
                 if (this.audio.audioEnglish != null)
                     return this.audio.audioEnglish
@@ -140,12 +95,36 @@ import FuriganaComponent from './FuriganaComponent.vue';
                     return this.audio.audioKana
                 else
                     return ''
->>>>>>> dev-branch
+            },
+            audioAuthor: function() {
+                if (this.audio.author != null) {
+                    return this.audio.author
+                }
+                else return ''
+            },
+            licenseType: function() {
+                if (this.audio.license_type != null) {
+                    if (this.audio.license_type != '\\N') {
+                        return this.audio.license_type
+                    }
+                    else {
+                        return 'CC'
+                    }
+                }
+                else return '';
+            },
+            licenseLink: function() {
+                const default_link_base = 'https://tatoeba.org/eng/user/profile/'
+                if (this.audio.license_link != null) {
+                    if (this.audio.license_link == '\\N') {
+                        return default_link_base + this.audio.author
+                    }
+                    else {
+                        return this.audio.license_link
+                    }
+                }
+                else return '';
             }
-        },
-
-
-        watch: {
         },
 
         methods: {
@@ -159,7 +138,6 @@ import FuriganaComponent from './FuriganaComponent.vue';
 
 
             /*  The randomAudio API call returns an object with the following structure:
-<<<<<<< HEAD
             *       jpn_id: ID of Japanese text in Tatoeba's jpn_sentences
             *       eng_id: ID of English text in Tatoeba's eng_sentences
             *       jpn_text: Japanese text
@@ -167,38 +145,20 @@ import FuriganaComponent from './FuriganaComponent.vue';
             *       author: Name of voice actor for audio clip
             *       license_type: Type of licensing (needed to credit authors)
             *       license_link: Link to be included with author recognition
-=======
-             *      id: Arbitrary value
-             *      filename: filename of the audio file on the API server
-             *      audioKanji: Text transcription of the audio file
-             *      audioKana: Text transcription of the audio file without kanji
-             *      audioEnglish: English translation of audioKanji/audioKana
-             *      createdAt: Arbitrary value
-             *      updatedAt:Arbitrary value
-             *
-             *  The audio API call returns an audio stream of the specified file to be used by the mediaserver library
->>>>>>> dev-branch
              */
             getAudio() {
                 this.isInputShown = true;
                 this.guess = "";
-<<<<<<< HEAD
-                axios(this.endpoint + 'randomAudio/')
-=======
                 
                 axios(`${this.endpoint}/randomAudio/`)
->>>>>>> dev-branch
                     .then(response => {
                         console.log(response.data)
                         this.audio = response.data;
-<<<<<<< HEAD
-                        this.tokenize();
                         this.computedFilepath = "https://audio.tatoeba.org/sentences/jpn/" + response.data["jpn_id"] + '.mp3';  // This API call returns an audio stream of the specified file to be used by the mediaserver library
-=======
-                        this.computedFilepath = `${this.endpoint}/audio/${response.data["filename"]}`;
->>>>>>> dev-branch
-                        this.audioComponentCounter += 1;    // Refresh the furigana-component
                         this.tokenizeThenFuriganize();
+                        //this.computedFilepath = `${this.endpoint}/audio/${response.data["filename"]}`;
+                        console.log(response.data)
+                        this.audioComponentCounter += 1;    // Refresh the furigana-component
 
                     })
                     .catch(error => {
@@ -214,13 +174,11 @@ import FuriganaComponent from './FuriganaComponent.vue';
              */
             tokenizeThenFuriganize: function () {
                 let tokenList = []; // TokenList will contain an element for each word in the sentence to be analyzed
-<<<<<<< HEAD
-                let tokens = this.tokenizer.tokenize(this.audioKana);    // Breaks the transcription up into an array of words
-=======
                 let tokenizer = this.$store.state.analyzer.tokenizer;
-                let tokens = tokenizer.tokenize(this.audio.audioKanji);    // Breaks the transcription up into an array of words
+                let textToAnalyze = this.audio['jpn_text']
+                console.log(textToAnalyze)
+                let tokens = tokenizer.tokenize(textToAnalyze);    // Breaks the transcription up into an array of words
                 let textTrie = this.$store.state.dictionary.textTrie;
->>>>>>> dev-branch
                 let count = 0;
                 for (let i = 0; i < tokens.length; i++) {
                     let text = tokens[i]['surface_form'];  // The 'surface_form' option passed here signifies the original form used

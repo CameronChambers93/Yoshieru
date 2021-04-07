@@ -23,4 +23,4 @@ I have experience with a couple of frameworks, but felt none of them really fit 
 The first step was to implement the back end needed to supply the necessary information for this project. I did a little bit of searching and came across [JMDict](http://edrdg.org/jmdict/j_jmdict.html), which since 1999 has had "at its aim the compilation of a multilingual lexical database with Japanese as the pivot language." The lexical database holds information about 'every' Japanese word, including definitions, word type, and auxiliary information. I have an Express server which parses the JSON file, stores information regarding each entry in the database, then uses that information to handle searches in the form of API calls.
 
 
-I have uploaded a copy to a VM that I will try to keep available [here.](http://ec2-100-25-211-104.compute-1.amazonaws.com:5000/index.html)
+You can access the application [here.](https://cameronchambers93.github.io/Yoshieru/)

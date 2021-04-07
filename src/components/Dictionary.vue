@@ -4,52 +4,7 @@
             <span class="toolbar-text md-display-1" v-html="reading"></span>
         </md-content>
 
-<<<<<<< HEAD
-        <md-content class="dictionary-content content md-scrollbar">
-            <div style="display: flex; padding-top: .3em" v-if="entry.kanji.length != 0" class="md-headline" >
-                <div>
-                    Hiragana: 
-                </div>
-                <div style="display: block; padding-left: .3em">
-            
-                    <div>
-                        {{ hiragana }}
-                    </div>
-                </div>
-            </div>
-
-            <div style="display:block; margin-top:.25em">
-	            <div class="word-type-text md-headline" v-html="wordTypeText"></div>
-            </div>
-
-            <div v-if='keb.length != 0' style="display: flex; padding-top: .3em" class="md-headline">
-                <div>
-                    Other forms:
-                </div>
-                <div style="display: block; padding-left: .3em">
-                    <div class="md-display-1"  style="padding-top:.25em; opacity:60%;"  v-for='value in keb'>
-                        {{ value }}
-                    </div>
-                </div>
-            </div>
-            <div style="margin-top: .2em" class="md-display-1">Definitions:</div>
-	        <div class="md-headline" style="margin-left: 1em"  v-for='(gloss, index) in gloss'>{{ index + 1 }}. {{ gloss }}</div>
-
-            <div class='example_sentences'>
-                <div style="text-align: left; margin-bottom:.5rem" class="md-display-1" v-if="(exampleSentences.length)">Examples:</div>
-                <div v-for='(sentence, index) of exampleSentences'>
-                    <div class="ex_sentence_jpn">{{ sentence.jpn_text }}</div>
-                    <div class="ex_sentence_eng">{{ sentence.eng_text }}</div>
-                </div>
-            </div>
-            <md-button style="margin-top:1em;" class="md-raised md-primary" v-on:click="$emit('getPreviousEntry')"><- {{ previousEntry }}</md-button>
-            <md-button style="margin-top:1em; float: right;" class="to-deck-btn md-raised md-primary" v-on:click="atAddDialog = true">Add card to deck</md-button>
-
-        </md-content>
         <md-dialog class="md-layout" :md-active.sync="atAddDialog">
-=======
-        <md-dialog style="max-height: 100%;" class="md-layout" :md-active.sync="atAddDialog">
->>>>>>> dev-branch
             <md-dialog-title>Select Deck</md-dialog-title>
             <md-dialog-content>
                 <md-content style="display: flex;">
@@ -69,8 +24,8 @@
             </md-dialog-content>
 
             <md-dialog-actions>
-                <md-button class="md-primary" @click="closeDialog">Close</md-button>
-                <md-button class="md-primary" @click="addCardToDeck">Save</md-button>
+                <md-button class="md-primary" @click="closeDialog()">Close</md-button>
+                <md-button class="md-primary" @click="addCardToDeck()">Save</md-button>
             </md-dialog-actions>
         </md-dialog>
 
@@ -97,6 +52,16 @@
                     </div>
                 </div>
             </div>
+            <div class='example_sentences'>
+                <div style="text-align: left; margin-bottom:.5rem" class="md-display-1" v-if="(exampleSentences.length)">Examples:</div>
+                <div v-for='(sentence, index) of exampleSentences' :key="index">
+                    <Sentence
+                        :jpn="sentence.jpn_text"
+                        :eng="sentence.eng_text"
+                        v-bind:cStyle="exampleSentenceStyle"
+                         />
+                </div>
+            </div>
 
             <md-button style="margin-top:1em;" class="md-raised md-primary" v-on:click="getPreviousEntry">&lt;- {{ previousEntryName }}</md-button>
             <md-button style="margin-top:1em; float: right;" class="to-deck-btn md-raised md-primary" v-on:click="atAddDialog = true">Add card to deck</md-button>
@@ -105,37 +70,26 @@
 </template>
 
 <script>
+import axios from 'axios'
     import tagDict from './../assets/tagDict.json';
 //    import tagConversions from './../assets/jpnToEngTags.json';
 import { mapActions, mapState, mapGetters, mapMutations } from 'vuex';
+import Sentence from './ExampleSentence.vue'
 
 
     export default {
         props: {
         },
                
+        components: {
+            Sentence
+        },
 
-<<<<<<< HEAD
-    data() {
-        return {
-            endpoint: 'http://localhost:3000/api/',
-            reading: "",                        // The text displayed in the Dictionary header
-            atAddDialog: false,                 // For current dialog display.                      TODO: Replace with modal
-            deckSelection: [],                  // For selecting the decks to which new flashcards will be added
-            definitionSelection: [],            // For selecting which definition(s) will be added to new flashcards
-            deckSelectionError: false,          // Shows error if user doesn't select a deck for adding flashcards
-            definitionSelectionError: false,    // Shows error if user doesn't specify which definition(s) to add to flashcard
-            exampleSentenceIDs: [],
-            exampleSentences: [],
-        }
-    },
-=======
         metaInfo() {
             return { 
                 title: this.post && this.post.title,
             };
         },
->>>>>>> dev-branch
 
         data() {
             return {
@@ -149,7 +103,10 @@ import { mapActions, mapState, mapGetters, mapMutations } from 'vuex';
                 definitionSelectionError: false,
                 definitionSelection: [],
                 reading: "",
-                updateInterval: null
+                updateInterval: null,
+                endpoint: 'http://ec2-100-25-211-104.compute-1.amazonaws.com:5000/api/',
+                exampleSentenceIDs: [],
+                exampleSentences: [],
             }
         },
 
@@ -164,6 +121,11 @@ import { mapActions, mapState, mapGetters, mapMutations } from 'vuex';
             ...mapGetters('dictionary', {
                 previousEntryName: 'previousEntryName'
             }),
+            exampleSentenceStyle: function() {
+                return {
+                    color: 'white'
+                }
+            },
             id: () => {
                 if (this.entry == null)
                     return null
@@ -242,97 +204,26 @@ import { mapActions, mapState, mapGetters, mapMutations } from 'vuex';
                     if (i < this.definitionSelection.length - 1)
                         back += "\n";
                 }
-<<<<<<< HEAD
-            }
-            return msg
-        }
-
-    },
-    
-    created() {
-            this.getReading();
-            this.getSentenceIDs("話す")
-    },
-=======
                 return {
                     "front": this.reading,
                     "back": back,
                     "score": 0
                 }
             },
->>>>>>> dev-branch
 
             emitGlobalGetEntry(id) {
                 id == false;
                 //this.$eventHub.$emit('globalGetEntry', id)
             },
 
-<<<<<<< HEAD
-        // Returns the reading of the current entry, with or without Kanji
-        getReading() {
-            let tmpReading = "";
-            if (this.entry.kanji.length == 0) {   // If entry reading contains no kanji
-                tmpReading = this.entry['kana'][0].text;  
-            }
-            else {
-                try {
-                    if (this.tokenizer != null) {
-                        tmpReading = this.addFurigana([{'furigana': this.entry['kanji'][0].text, 'index': 0, 'tokenId': ''}]);
-                    }
-=======
             addCardToDeck() {
                 this.newCardContents = this.getNewCardContents();
                 if (this.deckSelection.length == 0) {
                     this.deckSelectionError = true;
->>>>>>> dev-branch
                 }
                 else if (this.definitionSelection.length == 0) {
                     this.definitionSelectionError = true;
                 }
-<<<<<<< HEAD
-            }
-            if (tmpReading != undefined) {
-                this.reading = tmpReading;
-            }
-            
-        },
-
-        /*  Adds furigana to the kanji displayed in the Dictionary header
-        *   Although this method uses the same approach as in Audio.vue (processing an array of words), currently only 1 word will ever be processed in the Dictionary
-        *   Will be kept in this fashion in the hopes of supporting compound words in the future
-        */
-        addFurigana(tokenList) {
-            tokenList.sort((a, b) => a.index - b.index);    // Sorts in ascending order based on index value (Original sentence order)
-            let count = 0;                                  // Used to determine if all words have yet to be processed
-            for (let i = 0; i < tokenList.length; i++) {
-                var promise = new Promise((resolve, reject) => {
-                    async function furiganize(kuroshiro, kana, index) {
-                        var result = await kuroshiro.convert(kana, { mode: "furigana", to: "hiragana" });;    // Returns the text with Furigana added
-                        count += 1;
-                        let response = [result, index]
-                        resolve(response)
-                    }
-                    furiganize(this.kuroshiro, tokenList[i]['furigana'], i);
-                });
-
-                promise.then((result) => {
-                    tokenList[result[1]]['furigana'] = result[0]    // Overwrites the basic text to the same text containing Furigana
-
-                    if (count == tokenList.length) {
-                        let msg = "";
-                        for (var token of tokenList) {
-                            msg += token.furigana + "\n";
-                        }
-                        this.reading = msg;
-                        return "Reading: " + msg
-                    }
-                }, (err) => {
-                    console.log(err)
-                    });
-
-            }
-        },
-=======
                 else {
                     this.$store.commit('flashcards/addCardToDeck', 
                         {   "deckNames": this.deckSelection,
@@ -343,12 +234,39 @@ import { mapActions, mapState, mapGetters, mapMutations } from 'vuex';
                     this.closeDialog();
                 }
             },
->>>>>>> dev-branch
-
+            /* To close the 'add to deck' dialog. Will be replaced with modal in the future
+            */
             closeDialog() {
                 this.deckSelectionError = false;
                 this.atAddDialog = false;
-            }
+            },
+            getSentenceIDs(reading) {
+                console.log(reading)
+                axios(this.endpoint + 'find_sentences/?k_ele=' + reading)
+                        .then(response => {
+                            this.exampleSentenceIDs = response.data
+                            this.exampleSentences = []
+                            this.getSentences()
+                        })
+                        .catch(error => {
+                            console.log('---error---');
+                            console.log(error);
+                        })
+            },
+            getSentences() {
+                let numberOfSentences = (this.exampleSentenceIDs.length < 5) ? this.exampleSentenceIDs : 5
+                for (let i = 0; i < numberOfSentences; i++) {
+                    axios(this.endpoint + 'sentence/?sentence_id=' + this.exampleSentenceIDs[i])
+                        .then(response => {
+                            console.log(response.data)
+                            this.exampleSentences.push(response.data)
+                        })
+                        .catch(error => {
+                            console.log('---error---');
+                            console.log(error);
+                        })
+                }
+            },
             
         },
         beforeDestroy() {
@@ -356,70 +274,30 @@ import { mapActions, mapState, mapGetters, mapMutations } from 'vuex';
         },
         created() {
             this.getReading();
+            this.getSentenceIDs("話す");
             //this.$eventHub.$emit('globalGetEntry', 1562350)
 
         },
 
-<<<<<<< HEAD
-        /* To close the 'add to deck' dialog. Will be replaced with modal in the future
-        */
-        closeDialog() {
-            this.deckSelectionError = false;
-            this.atAddDialog = false;
-        },
-        getSentenceIDs(reading) {
-            console.log(reading)
-            axios(this.endpoint + 'find_sentences/?k_ele=' + reading)
-                    .then(response => {
-                        this.exampleSentenceIDs = response.data
-                        this.exampleSentences = []
-                        this.getSentences()
-                    })
-                    .catch(error => {
-                        console.log('---error---');
-                        console.log(error);
-                    })
-        },
-        getSentences() {
-            let numberOfSentences = (this.exampleSentenceIDs.length < 5) ? this.exampleSentenceIDs : 5
-            for (let i = 0; i < numberOfSentences; i++) {
-                axios(this.endpoint + 'sentence/?sentence_id=' + this.exampleSentenceIDs[i])
-                    .then(response => {
-                        console.log(response.data)
-                        this.exampleSentences.push(response.data)
-                    })
-                    .catch(error => {
-                        console.log('---error---');
-                        console.log(error);
-                    })
-            }
-        }
         
-    },
+
 
 
     watch: {
-        /* Updates the Dictionary contents when a new word is selected
-        */
-        entry: function (newEntry) {
-            if (newEntry.kanji.length == 0) {
-                this.getSentenceIDs(newEntry.kana[0].text)
-            }
-            else {
-                this.getSentenceIDs(newEntry.kanji[0].text)
-            }
-            this.getReading();
-        },
-=======
-        watch: {
             page: function(newVal) {
                 this.entry = newVal[0]
             },
-            entry: function () {
-                this.getReading();
+            entry: function (newEntry) {
+                this.exampleSentences = []
+                if (newEntry.k_ele && newEntry.k_ele.length != 0) {
+                    this.getSentenceIDs(newEntry.k_ele[0].keb[0])
+                }
+                else {
+                    this.getSentenceIDs(newEntry.r_ele[0].reb[0])
+                }
+                    this.getReading();
             },
         }
->>>>>>> dev-branch
     }
 </script>
 
@@ -468,15 +346,5 @@ import { mapActions, mapState, mapGetters, mapMutations } from 'vuex';
 
     .example_sentences{
         text-align: right;
-    }
-
-    .ex_sentence_jpn{
-        font-size: 1.4rem;
-    }
-
-    .ex_sentence_eng{
-        font-size: 1em;
-        opacity: 80%;
-        margin-bottom: 1rem
     }
 </style>
