@@ -28,7 +28,7 @@ const state = () => ({
         resolve(tokens)
       })
     },
-      INITIALIZE({ commit }) {
+      async INITIALIZE({ commit }) {
         return new Promise(resolve => {
           let kuroshiro = new Kuroshiro();
           let analyzer = new KuromojiAnalyzer({dictPath: "./dict/"});

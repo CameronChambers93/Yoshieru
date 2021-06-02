@@ -77,7 +77,14 @@ const state = () => ({
       state.currentDeck = {};
     },
     createDeck(state, deckName) {
-      state.decks = Object.assign({}, state.decks, { [deckName]: {"name" : name, "deck" : [], "numCorrect": 0 }});
+      state.decks = Object.assign({}, state.decks, {[deckName]: {
+        "name" : name,
+        "deck" : [],
+        "numCorrect": 0,
+        "cardFormatting": {
+          "Front": [{"field": 'kanji', 'style': ''}],
+          "Back" : [{"field": 'english', 'style': ''}]
+          }}});
     },
     addCardToDeck(state, {deckNames, card}) {
       for (const name of deckNames) {

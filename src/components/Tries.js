@@ -49,14 +49,20 @@ class TextTrie{
         }
         if (tag) {
             if (tag in node.values)
-                return node.values[tag]
+            return node.values[tag]
         }
+        // If used for searching
         let ids = []
-        for (const pos of Object.values(node.values)) {
-            for (const id of pos) {
-                if (ids.indexOf(id) == -1) 
-                    ids.push(id)
+        let nodes = []
+        while (node) {
+            Object.values(node.children).forEach(e => nodes.push(e))
+            for (const pos of Object.values(node.values)) {
+                for (const id of pos) {
+                    if (ids.indexOf(id) == -1) 
+                        ids.push(id)
+                }
             }
+            node = nodes.pop();
         }
         return ids;
     }
@@ -151,8 +157,10 @@ const tries = (JMDict) => {
             for (const cPos of word.pos)
                 textTrie.insert(r_el.reb[0], id, cPos)
         }
+        
         idTrie.insert(id, word)
     }
+
     return [ textTrie, idTrie ]
 }
 

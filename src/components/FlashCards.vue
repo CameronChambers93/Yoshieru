@@ -1,31 +1,61 @@
 <template>
-    <div>
-        <md-content class="toolbar">
+    <div id="GRID" class="grid-container">
+        <div class="toolbar">
             <div v-if="!currentDeck.deck" class="md-headline">
                 <span class="md-headline">Select a Deck</span>
             </div>
             <div v-else class="md-headline">
                 <md-button class="md-default" @click="toMenu" style="float:left">Menu</md-button>
                 <span class="md-headline">{{ currentDeck.numCorrect }}  |  {{ unpassedCards }}</span>
-                <md-button class="md-default" @click="atDeckSettings = true"><md-icon>settings</md-icon></md-button>
+                <md-button class="md-default" @click="atDeckSettings = !atDeckSettings" style="min-width: 2em; margin-right: 1em"><md-icon style="color: white !important;">settings</md-icon></md-button>
             </div>
-        </md-content>
+        </div>
         
-        <md-drawer :md-active.sync="atDeckSettings">
-            <md-toolbar class="md-transparent" md-elevation="1">
+        <md-dialog class="md-layout" :md-active.sync="atDeckSettings2">
+            <md-dialog-title class="md-transparent" md-elevation="1">
                 <span class="md-title">{{ currentDeck.name }}</span>
-            </md-toolbar>
+            </md-dialog-title>
 
-            <md-list v-if="atDeckSettings == true">
-                <md-list-item v-for="(card, index) in currentDeck['deck']" :key=index>
-                    {{ card['front'] }}
-                    <md-button class="md-default" @click="removeCardFromDeck(index)">
-                        <md-icon>delete_forever</md-icon>
-                    </md-button>
-                </md-list-item>
+            <md-dialog-content>
+                <div v-if="atDeckSettings2 == true">
+                    <div v-for="(card, index) in currentDeck['deck']" :key=index style="display: grid; grid-template-columns: 1fr 1fr 1fr 1fr;">
+                        <div>{{ card['kanji'] }}</div>
+                        <div>{{ card['kana'] }}</div>
+                        <div>{{ getPrettyDate(card['date']) }}</div>
+                        <md-button class="md-default" @click="removeCardFromDeck(index)">
+                            <md-icon>delete_forever</md-icon>
+                        </md-button>
+                    </div>
 
-            </md-list>
-        </md-drawer>
+                </div>
+                <div>
+                    <div v-for="(side, index) of currentCardFormatting" :key='index' style="display: grid">
+                        <h3>{{index}}</h3>
+                        <div v-for="(field, i) of side" :key="i" style="display: flex; align-items: flex-start; width: 100%">
+                            <select style="width: 4rem; height: 2rem;" v-model='field.field'>
+                                <option value='kanji'>kanji</option>
+                                <option value='kana'>kana</option>
+                                <option value='furigana'>furigana</option>
+                                <option value='english'>english</option>
+                                <option value='sentence_eng'>sentence_eng</option>
+                                <option value='sentence_kanji'>sentence_kanji</option>
+                            </select>
+                            <textarea v-model="field.style" />
+                            <md-button class="md-default" @click="removeStyle(side, i)">
+                                <md-icon>delete_forever</md-icon>
+                            </md-button>
+                        </div>
+                        <md-button style="width: 100%" class="md-default" @click="addStyle(side)">
+                            <md-icon>add</md-icon>
+                        </md-button>
+                    </div>
+                </div>
+            </md-dialog-content>
+
+            <md-dialog-actions>
+                <md-button class="md-primary" @click="atDeckSettings = false">Close</md-button>
+            </md-dialog-actions>
+        </md-dialog>
 
         <md-dialog class="md-layout" :md-active.sync="atCreateDialog" :md-click-outside-to-close="false">
             <md-dialog-title>Enter deck name</md-dialog-title>
@@ -45,7 +75,7 @@
             </md-dialog-actions>
         </md-dialog>
         
-        <md-content v-if="!currentDeck.deck" class="innerContent md-scrollbar" style="height: 595px; background-color: grey">
+        <div v-if="!currentDeck.deck" class="innerContent md-scrollbar">
                 <div style="display:block" v-for="(index, deck) in this.decks" :key="deck">
                     <div style="display:flex; width:100%" class="md-headline">
                         <md-button class="md-raised md-primary" @click="setCurrentDeck(deck)">{{ deck }}</md-button>
@@ -65,37 +95,105 @@
                     </div>
                 </div>
                 <md-button class="new-deck-btn md-raised md-primary" @click="atCreateDialog = true">Create new deck</md-button>
-        </md-content>
+        </div>
 
-        <md-content v-else class="innerContent md-scrollbar" style="height: 595px; padding: 0px 10px 0px 10px; overflow: auto; background-color: grey">
-            <div @click="revealCard">
-                <div class="card">
-                    <flashcard-component :_html="currentFront" style="font-size:24px; width:100%" :key="furiganaCounter"></flashcard-component>
+        <div v-else class="innerContent md-scrollbar">
+            <div v-if="atDeckSettings"
+                class="settings-popup md-scrollbar"
+                >
+                <div style="display: grid; grid-template-columns: 1fr 1fr 1fr 1fr;">
+                    <div>Kanji</div>
+                    <div>Kana</div>
+                    <div>Date Added</div>
+                </div>
+                <div v-for="(card, index) in currentDeck['deck']" :key=index style="display: grid; grid-template-columns: 1fr 1fr 1fr 1fr;">
+                    <div>{{ card['kanji'] }}</div>
+                    <div>{{ card['kana'] }}</div>
+                    <div>{{ getPrettyDate(card['date']) }}</div>
+                    <md-button class="md-default" @click="removeCardFromDeck(index)">
+                        <md-icon>delete_forever</md-icon>
+                    </md-button>
+                </div>
+                <div>
+                    <div v-for="(side, index) of currentCardFormatting" :key='index' style="display: grid">
+                        <h3>{{index}}</h3>
+                        <div v-for="(field, i) of side" :key="i" style="display: flex; align-items: flex-start; width: 100%">
+                            <select style="width: 4rem; height: 2rem;" v-model='field.field'>
+                                <option value='kanji'>kanji</option>
+                                <option value='kana'>kana</option>
+                                <option value='furigana'>furigana</option>
+                                <option value='english'>english</option>
+                                <option value='sentence_eng'>sentence_eng</option>
+                                <option value='sentence_kanji'>sentence_kanji</option>
+                            </select>
+                            <textarea v-model="field.style" />
+                            <md-button class="md-default" @click="removeStyle(side, i)">
+                                <md-icon>delete_forever</md-icon>
+                            </md-button>
+                        </div>
+                        <md-button style="width: 100%" class="md-default" @click="addStyle(side)">
+                            <md-icon>add</md-icon>
+                        </md-button>
+                    </div>
+                </div>
+            </div>
+            <div v-else @click="revealCard">
+                <div v-if="currentCardFormatting" style="padding-top: 2rem;"> 
+                    <div v-for="(field, index) of currentCardFormatting.Front" :key='index' :style="field.style">
+                        <div v-if="field.field == 'sentence_eng'">
+                            {{ sentenceEng }}
+                        </div>
+                        <div v-if="field.field == 'sentence_kanji'">
+                            <furigana-component :parent='"AUDIO"' :styleString="field.style" v-bind:tokens="sentenceKanjiWithFurigana" class="furigana-component"></furigana-component>
+                        </div>
+                        <div v-if="field.field == 'furigana'">
+                            <div v-html='currentDeck.deck[0].furigana' />
+                        </div>
+                        <div v-else>
+                            {{ currentDeck.deck[0][field.field] }}
+                        </div>
+                    </div>
                 </div>
 
                 <div v-if="this.isBackShown == true" class="card">
-                    <flashcard-component v-bind:_html="currentBack" style="font-size:24px; width:100%" :key="furiganaCounter"></flashcard-component>
+                    <div v-for="(field, index) of currentCardFormatting.Back" :key='index + "z"' :style="field.style">
+                        <div v-if="field.field == 'sentence_eng'">
+                            {{ sentenceEng }}
+                        </div>
+                        <div v-if="field.field == 'sentence_kanji'">
+                            <furigana-component :parent='"AUDIO"' v-bind:tokens="sentenceKanjiWithFurigana" class="furigana-component"></furigana-component>
+                        </div>
+                        <div v-if="field.field == 'furigana'" :html='currentDeck.deck[0].furigana'>
+                        </div>
+                        <div v-else>
+                            {{ currentDeck.deck[0][field.field] }}
+                        </div>
+                    </div>
                 </div>
 
                 <div v-else style="opacity:50%" class="card">
                     <span class="md-body-1" style="font-size:16px">Tap to reveal answer</span>
                 </div>
+                <div v-if="this.isBackShown == true">
+
+                    <md-button class="md-raised md-primary" v-on:click.stop="answerCorrect">Correct</md-button>
+                    <md-button class="md-raised md-primary" v-on:click.stop="answerWrong">Wrong</md-button>
+
+                </div>
             </div>
+            
+        </div>
 
-            <div v-if="this.isBackShown == true">
 
-                <md-button class="md-raised md-primary" @click="answerCorrect">Correct</md-button>
-                <md-button class="md-raised md-primary" @click="answerWrong">Wrong</md-button>
-
-            </div>
-
-        </md-content>
     </div>
 </template>
 
 <script>
 import { mapState, mapMutations, mapActions, mapGetters } from 'vuex';
-import FlashCardComponent from './FlashcardComponent'
+import Mixins from '../mixins/Mixins'
+import axios from 'axios'
+import FuriganaComponent from './FuriganaComponent'
+
     export default {
         props: {
 
@@ -110,26 +208,53 @@ import FlashCardComponent from './FlashcardComponent'
             */
         },
 
+        mixins: [Mixins],
+
         data() {
             return {
                 isBackShown: false,
-                furiganaCounter: 10,
+                furiganaCounter: 1000,
                 cardCounter: 0,
+                deckCounter: 300,
                 currentFront: "",
                 currentBack: "",
+                endpoint: 'http://ec2-100-25-211-104.compute-1.amazonaws.com:5000/api/',
                 atCreateDialog: false,
                 atDeckSettings: false,
+                atDeckSettings2: false,
                 deckName: "",
-                nameError: false
+                nameError: false,
+                currentCardFormatting: null,
+                sentenceEng: '',
+                sentenceKanji: '',
+                sentenceKanjiWithFurigana: [],
+                lookupSentences: false,
             }
         },
         components: {
-            'flashcard-component': FlashCardComponent
+            'furigana-component': FuriganaComponent
         },
         watch: {
+            deckCounter: function() {
+                console.log(JSON.stringify(this.currentDeck))
+                this.lookupSentences = false;
+                for (let side of Object.values(this.currentCardFormatting)) {
+                    for (let field of Object.values(side)) {
+                        if (field.field == 'sentence_eng' || field.field == 'sentence_kanji')
+                            this.lookupSentences = true;
+                    }
+                }
+            },
             cardCounter: function () {
-                this.currentFront = this.currentDeck['deck'][0]['front'];
                 this.currentBack = this.currentDeck['deck'][0]['back'];
+                this.currentEntry = (this.getWord(this.currentDeck['deck'][0].id))
+                this.currentCardFormatting = this.currentDeck.cardFormatting;
+                this.sentenceKanji = [];
+                //this.sentenceKanjiWithFurigana = [];
+                this.sentenceEng = '';
+                if (this.lookupSentences)
+                    this.getRandomSentence(this.currentDeck.deck[0].kanji)
+                this.isBackShown = false;
             },
 
             // Resets the error dialog when creating a deck
@@ -139,7 +264,6 @@ import FlashCardComponent from './FlashcardComponent'
         },
 
         created() {
-
         },
 
         validations: {
@@ -163,14 +287,60 @@ import FlashCardComponent from './FlashcardComponent'
                     return this.currentDeck.deck.length - this.currentDeck.numCorrect;
                 else
                     return -1
-            }
+            },
         },
         methods: {
             ...mapMutations('flashcards', ['setCurrentDeck', 'toMenu', 'removeCardFromDeck', 'deleteDeck']),
             ...mapActions('flashcards', ['answerCorrect', 'answerWrong']),
+
+            /*  For a given date, returns a string with the following format:
+            *     YYYY-MM-DD  
+            */
+            getPrettyDate(_date) {
+                let date = new Date(_date);
+                return `${date.getYear()}-${this.pad(date.getMonth() + 1, 2, 0)}-${this.pad(date.getDate(), 2, 0)}`
+            },
+
+            /* For a given string n, pads string with desired character to achieve desired length
+            *   n: String to be padded
+            *   width: Desired length of output
+            *   z: Character to pad string with (default 0)
+            */
+            pad(n, width, z) {
+                z = z || "0";
+                n = n + "";
+                return n.length >= width
+                    ? n
+                    : new Array(width - n.length + 1).join(z) + n;
+            },
+            getRandomSentence(reading) {
+                axios(this.endpoint + 'get_random_sentence/?k_ele=' + reading)
+                        .then(response => {
+                            this.sentenceEng = response.data.eng_text;
+                            this.sentenceKanji = response.data.jpn_text;
+                            this.furiganizeSentence(response.data.jpn_text)
+                            .then(results => {
+                                this.sentenceKanjiWithFurigana = results
+                            })
+                        })
+                        .catch(error => {
+                            console.log('---error---');
+                            console.log(error);
+                        })
+            },
+            
             // Reveals the answer to the current card. Replaces flipCard for the card body itself
             revealCard() {
+                console.log('hi')
                 this.isBackShown = true;
+            },
+
+            removeStyle(side, field) {
+                side.splice(field, 1);
+            },
+
+            addStyle(side) {
+                side.push({field: 'kanji', style: ''})
             },
 
             // Sets the current set to one selected by user
@@ -178,6 +348,7 @@ import FlashCardComponent from './FlashcardComponent'
                 this.isBackShown = true;
                 this.$store.commit('flashcards/setCurrentDeck', deck)
                 this.isBackShown = false;
+                this.deckCounter += 1;
                 this.cardCounter += 1;
             },
 
@@ -188,6 +359,7 @@ import FlashCardComponent from './FlashcardComponent'
 
             // Primitive method to move the current card to the end of the current deck
             answerCorrect() {
+                this.isBackShown = false;
                 this.$store.dispatch('flashcards/answerCorrect', this.currentDeck.name)
                 this.isBackShown = false;
                 this.cardCounter += 1;
@@ -252,24 +424,34 @@ import FlashCardComponent from './FlashcardComponent'
 
 <style lang="scss" scoped>
 
+.md-icon{
+    color: black !important;
+}
+
+    .grid-container{
+        display: grid;
+        grid-template-rows: 4em auto
+    }
+
     .innerContent {
+        color: black;
+        margin: 1rem;
+        display: block;
         margin-left: auto;
         margin-right: auto;
-        background-color: grey;
-        height: 595px;
-        padding: 10px 10px 0px 10px;
+        width: 100%;
+        background-color: white;
         overflow: auto;
         scrollbar-width: none;  /* FireFox */
         -ms-overflow-style: none; /* IE 10+ */
         ::-webkit-scrollbar { 
         display: none; /* Chrome Safari */
-        }
+    }
     }
 
     .toolbar {
         display: flex;
-        height: 80px;
-        background-color: darkolivegreen !important;
+        background-color: var(--flashcards-color) !important;
         text-align: center;
         border-radius: 10px 10px 0px 0px;
         align-items: center;
@@ -285,5 +467,19 @@ import FlashCardComponent from './FlashcardComponent'
         float: right;
     }
 
+    .settings-popup{
+        padding: 1rem 0 1rem 0;
+        position: relative;
+        left: 1.2rem;
+        width: 100%;
+        min-width: 40rem;
+        z-index: 0;
+        overflow: auto;
+        scrollbar-width: none;  /* FireFox */
+        -ms-overflow-style: none; /* IE 10+ */
+        ::-webkit-scrollbar { 
+        display: none; /* Chrome Safari */
+        }
+    }
     
 </style>

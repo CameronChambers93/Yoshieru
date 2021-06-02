@@ -63,7 +63,7 @@ const state = () => ({
   
   // actions
   const actions = {
-      INIT({ commit }) {
+      async INIT({ commit }) {
         return new Promise((resolve) => {
           axios(`http://ec2-100-25-211-104.compute-1.amazonaws.com:5000/api/getJMDict`).then(result => {
             let [textTrie, idTrie] = tries(result.data.message)

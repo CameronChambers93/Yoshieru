@@ -2,8 +2,8 @@
     <div>
         <div>
             <furigana-component
+                :parent='"DICTIONARY"'
                 v-bind:tokens="tokenList"
-                class="furigana-component"
                 :_style="sentenceStyle"
                 />
         </div>
@@ -23,7 +23,7 @@ export default {
         return {
             tokenList: [],
             sentenceStyle: {
-                color: 'white',
+                color: 'black',
                 'font-size': '1.6em'
             }
         }
@@ -39,6 +39,14 @@ export default {
         eng: {
             default: '',
             type: String
+        },
+        cStyle: {
+            default: () => {
+                return {
+                    'color': 'black'
+                }
+            },
+            type: Object
         }
     },
     methods: {

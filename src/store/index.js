@@ -4,6 +4,8 @@ import dictionary from './modules/dictionary.js'
 import flashcards from './modules/flashcards.js'
 import audio from './modules/audio.js'
 import analyzer from './modules/analyzer.js'
+import user from './modules/user.js'
+import easynews from './modules/easynews.js'
 //import createLogger from '../../../src/plugins/logger'
 
 Vue.use(Vuex)
@@ -15,7 +17,9 @@ export default new Vuex.Store({
     dictionary,
     flashcards,
     audio,
-    analyzer
+    analyzer,
+    user,
+    easynews
   },
   //strict: debug,
   //plugins: debug ? [createLogger()] : []

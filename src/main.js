@@ -6,8 +6,8 @@ import store from './store/index'
 import VueMaterial from 'vue-material'
 import 'vue-material/dist/vue-material.min.css'
 import 'vue-material/dist/theme/default-dark.css'
+import 'material-design-icons-iconfont/dist/material-design-icons.css'
 Vue.use(VueMaterial)
-
 Vue.config.productionTip = false
 
 //For easy custom dialog
