@@ -1,17 +1,40 @@
 <template>
     <div>
-        <canvas id="canvas" :style="canvasStyle" />
+        <div id="canvas" :style="canvasStyle" style="display: grid; grid-row-gap: .5em; padding: .5em .5em;">
+            <div v-for="(entry, entryKey) in entries" :key="entry.id">
+                <div style="display: grid; grid-template-columns: auto auto; grid-column-gap: .5em; grid-row-gap: 2em;">
+                    <div style="font-size: 1.4em" v-if="entry.furigana" v-html="entry.furigana">
+                    </div>
+                    <div v-else style="font-size: 1.4em" v-html="getReading(entryKey)">
+                    </div>
+                </div>
+                <div v-for="(sense, key) in entry.sense" :key="key">
+                    <div style="display: flex;">
+                        <PosTag v-for="(pos, key2) in sense.pos" :key="key2" :text='pos' />
+                    </div>
+                    <div>
+                        <div v-for="(gloss, key3) in sense.gloss" :key='key3' style="text-align: left">
+                            {{ gloss }}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
 </template>
 <script>
+import Mixins from '../mixins/Mixins'
+import PosTag from './BasicComponents/PosTag'
 
 export default {
     components: {
-        
+        PosTag
     },
+    mixins: [Mixins],
     data() {
         return {
-            canvasStyle: { left: '0px', top: '0px'}
+            canvasStyle: { left: '0px', top: '0px'},
+            entries: []
         }
     },
     created() {
@@ -40,133 +63,63 @@ export default {
     },
 
     mounted() {
-        let canvas = document.getElementById('canvas');
-        let ctx = canvas.getContext('2d');
-        let {text, lineCount} = this.getTextAndLineCount(this.popup.token.ids)
-        canvas.height = (text.length * 30) + (lineCount * 30);        
-        ctx.setTransform(this.PIXEL_RATIO, 0, 0, this.PIXEL_RATIO, 0, 0)
-        this.canvasStyle.left = Math.min(this.popup.x + 5, window.innerWidth - 380) + 'px';
-        let top = this.popup.y + 20;
-        if ( top + 30 + (text.length * 35) + (lineCount * 30) > window.innerHeight) {
-            top = Math.max(0, top - (60 + (text.length * 35) + (lineCount * 32)));   // Math.max used so popup doesn't go past window border
-        }
-        top = top + 'px';
-        this.canvasStyle.top = top
-        this.drawText(text);
+        this.entries = this.getEntries(this.popup.token.ids)
     },
 
     computed: {
-        PIXEL_RATIO: function () {
-            let ctx = document.createElement("canvas").getContext("2d"),
-                dpr = window.devicePixelRatio || 1,
-                bsr = ctx.webkitBackingStorePixelRatio ||
-                    ctx.mozBackingStorePixelRatio ||
-                    ctx.msBackingStorePixelRatio ||
-                    ctx.oBackingStorePixelRatio ||
-                    ctx.backingStorePixelRatio || 1;
-
-            return dpr / bsr;
-        },
     },
 
     methods: {
-        // Returns the text to be drawn and the number of lines the text will require - to be used for canvas height
-        // The text is defined as an array of objects with the following properties
-        //      reading: The kanji (hiragana if no kanji exists for word) followed by the hiragana of the word
-        //      textLines: The parts of speech for the word, followed by the definition of the word. The text is broken up into
-        //                  lines with max length of the width of the canvas
-        // LineCount is used to set the height of the canvas before drawing text
-        getTextAndLineCount(ids) {
-            let canvas = document.getElementById('canvas')
-            let ctx = canvas.getContext('2d');
-            let lineCounter = 0;
-            let textArray = [];
+        getEntries(ids) {
+            let entries = [];
             for (let i = 0; i < ids.length; i++) {
-                let idTrie = this.$store.state.dictionary.idTrie;
-                let entry = idTrie.findWord(ids[i]);
-                let reading = this.getReading(entry);
-                let definition = this.getPosAndDefinition(entry);
-                let textLines = this.getTextLines(ctx, definition, 200);
-                lineCounter += textLines.length;
-                textArray.push({reading, textLines});
+                let entry = this.getWord(ids[i]);
+                entries.push(entry)
             }
-            return {text: textArray, lineCount: lineCounter}
+            return entries
         },
         
         // For a given entry, returns the kanji (hiragana if no kanji exists for word) followed by the hiragana of the word
-        getReading(entry) {
-            let reading = '';
-            if (entry.keb.length)
-                    reading = entry.keb[0] + '   ';
+        getReading(index) {
+            let entry = this.entries[index];
+            if (entry.keb.length) {
+                if (entry.furigana)
+                    return entry.furigana
                 else
-                    reading = entry['r_ele'][0].reb[0] + '   ';
-            reading += ` ${entry['r_ele'][0].reb[0]}`
-            return reading;
-        },
-        // For a given entry, returns the parts of speech, followed by the definition of the word
-        getPosAndDefinition(entry) {
-            let definition = '(';
-            entry.pos.forEach((item,index) => {
-                definition += item + (index < entry.pos.length - 1 ? ', ' : ') ');
-            })
-            //for (let i = 0; i < entry.gloss.length; i++) {
-            entry.gloss.forEach((gloss, i) => {
-                gloss.forEach((item, index) => {
-                    definition += item + ((index < gloss.length - 1 || i < entry.gloss.length - 1) ? '; ' : '');
-                })
-            })
-            return definition;
-        },
-        // Draws text for the entry. Text object is generated by getTextAndLineCount
-        drawText(text) {
-            let canvas = document.getElementById('canvas')
-            let ctx = canvas.getContext('2d');
-            ctx.fillStyle = "#fbf0ff"
-            ctx.fillRect(0, 0, canvas.width, canvas.height)
-            let lineCounter = 0;
-            for (let i = 0; i < text.length; i++) {
-                ctx.fillStyle = "blue"
-                ctx.font = '1.4rem bold serif'
-                ctx.fillText(text[i].reading, 5, 25 + (lineCounter++ * 30))
-                ctx.fillStyle = "black"
-                ctx.font = '1rem serif'
-                for (let j = 0; j < text[i].textLines.length; j++) {
-                    ctx.fillText(text[i].textLines[j], 5, 20 + (lineCounter++ * 30))
-                }
+                    this.furiganizeWord(entry.keb[0]).then((result) => {
+                        this.entries[index].furigana = result
+                        this.entries.splice(index, 1, this.entries[index])
+                    })
+                    return entry.keb[0];
             }
+            else
+                return entry['r_ele'][0].reb;
         },
-        // Splits text into rows with max length of maxWidth
-        getTextLines(ctx, text, maxWidth) {
-            var words = text.split(" ");
-            var textLines = [];
-            var currentLine = words[0];
-
-            for (var i = 1; i < words.length; i++) {
-                var word = words[i];
-                var width = ctx.measureText(currentLine + " " + word).width;
-                if (width < maxWidth) {
-                    currentLine += " " + word;
-                } else {
-                    textLines.push(currentLine);
-                    currentLine = word;
-                }
-            }
-            textLines.push(currentLine);
-            return textLines;
+        getHiragana(entry) {
+            return entry['r_ele'][0].reb
+        },
+        getGloss(entry) {
+            return entry.gloss
         }
     },
 
     watch: {
+        entries: function() {
+            //setTimeout(console.log(document.getElementById('canvas').clientWidth, document.getElementById('canvas').clientHeight), 200)
+        }   
     }
 }
 </script>
 <style scoped>
 
-canvas{
-    min-width: 340px;
+#canvas{
+    max-width: 440px !important;
     border: 1px solid black;
-    position: fixed;
     z-index: 10;
+    position: fixed;
+    top: 0px;
+    left: 0px;
+    background: white
 }
 
 .example_sentences{
@@ -180,7 +133,7 @@ canvas{
 .ex_sentence_eng{
     font-size: 1em;
     opacity: 80%;
-    margin-bottom: 1rem
+    margin-bottom: 1rem;
 }
 
 </style>

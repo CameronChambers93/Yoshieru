@@ -15,10 +15,12 @@
 <script>
 import FuriganaComponent from './FuriganaComponent.vue';
 import tagConversions from './../assets/jpnToEngTags.json';
+import Mixins from './../mixins/Mixins'
 export default {
     components: {
         'furigana-component': FuriganaComponent
     },
+    mixins: [Mixins],
     data() {
         return {
             tokenList: [],
@@ -29,7 +31,9 @@ export default {
         }
     },
     created() {
-        this.tokenizeThenFuriganize();
+        this.furiganizeSentence(this.jpn).then(result => {
+            this.tokenList = result;
+        })
     },
     props: {
         jpn: {

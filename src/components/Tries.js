@@ -1,6 +1,6 @@
 //const keywordDict = JSON.parse(fs.readFileSync('C:/docs/Projects/JapanApp/server/files/keywordSentences.json'))
 //const sentenceLinks = JSON.parse(fs.readFileSync('C:/docs/Projects/JapanApp/server/files/sentenceLinks.json'))
-
+import tags from '../assets/jmdictTags.json'
 
 class TextTrieNode {
     constructor(char) {
@@ -34,9 +34,11 @@ class TextTrie{
                 node = new_node
             }
         }
+        tag = tags[tag];
         if (!(node.values[tag]))
             node.values[tag] = [];
-        node.values[tag].push(value);
+        if (node.values[tag].indexOf(value) == -1)
+            node.values[tag].push(value);
     }
     
     findWord(word, tag) {
@@ -49,7 +51,8 @@ class TextTrie{
         }
         if (tag) {
             if (tag in node.values)
-            return node.values[tag]
+                return node.values[tag]
+            else return []
         }
         // If used for searching
         let ids = []
@@ -103,18 +106,20 @@ class IdTrie{
 const tries = (JMDict) => {
     let textTrie = new TextTrie();
     let idTrie = new IdTrie();
+    
+
     for (const entry of JMDict) {
-        let id = entry["ent_seq"][0]
+        let id = entry["ent_seq"];
         
         
-        let r_ele = entry["r_ele"]
+        let r_ele = entry["r_ele"];
         let k_ele = entry["k_ele"];
         
         let keb = [];
         if (k_ele) {
             if (k_ele.length) {
                 for (const el of k_ele)
-                    keb.push(el.keb[0]);
+                    keb.push(el.keb);
             }
         }
         
@@ -124,28 +129,19 @@ const tries = (JMDict) => {
                 if ("pos" in sense) {
                     for (let p of sense.pos) {
                         let tag = p.replace(";", "").replace('&', '');
-                        pos.push(tag)
+                        if (pos.indexOf(tag) == -1)
+                            pos.push(tag)
                     }
                 }
             }
         }
         
-        let gloss = [];
+        let sense = [];
         if (entry["sense"] != null)
-            for (var sense of entry['sense']) {
-                let arr = [];
-                for (let gls of sense.gloss) {
-                    if (typeof gls == "string")
-                        arr.push(gls);
-                    else {
-                        arr.push(gls['_'])
-                    }
-                }
-                gloss.push(arr)
-            }    
+            sense = entry['sense']
     
     
-        let word = { id, r_ele, k_ele, keb, pos, gloss: gloss };
+        let word = { id, r_ele, k_ele, keb, pos, sense };
     
         if (word.keb) {
             for (const keb of word.keb) {
@@ -153,14 +149,14 @@ const tries = (JMDict) => {
                     textTrie.insert(keb, id, cPos)
             }
         }
+
         for (const r_el of word.r_ele) {
             for (const cPos of word.pos)
-                textTrie.insert(r_el.reb[0], id, cPos)
+                textTrie.insert(r_el.reb, id, cPos)
         }
         
         idTrie.insert(id, word)
     }
-
     return [ textTrie, idTrie ]
 }
 

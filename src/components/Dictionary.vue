@@ -19,8 +19,8 @@
                         <div style="color: red; margin-top: -10px" v-if="deckSelectionError == true">Please select a deck</div>
                     </md-content>
                     <md-content class="add-to-deck-content md-layout-item">  
-                        <div v-for='(gloss, index) in gloss' :key='index'>
-                            <md-checkbox v-model="definitionSelection" :value=gloss >{{ index + 1 }}. {{ gloss }}</md-checkbox>
+                        <div v-for='(sense, index) in sense' :key='index'>
+                            <md-checkbox v-model="definitionSelection" :value=getGloss(sense) >{{ index + 1 }}. {{ getGloss(sense) }}</md-checkbox>
                         </div>
                         <div style="color: red; margin-top: -10px" v-if="definitionSelectionError == true">Please select a definition</div>
                     </md-content>
@@ -50,14 +50,16 @@
             <div v-else v-on:click="addKanjiToKnownList">
                 <md-icon style="color: lightgrey; cursor: pointer">grade</md-icon>
             </div>
-            <div style="display:flex; flex-wrap: wrap; margin-top:.25em; justify-content: left">
-                <div class="word-type-text md-headline" v-for="(text, index) of posText" :key="index">{{ text }}</div>
-            </div>
 
-            <div style="margin: .25em 0 .25em 0; color: black; text-align: left; font-size: 1.6rem;" class="md-display-1">Definitions:</div>
-            
-            <div style="display:flex; opacity:60%; margin-bottom:.25em; font-size: 1.2rem;" class="md-headline"  v-for='(gloss, index) in gloss' :key='index'>
-                {{ index + 1 }}.  <div style="margin-left:.25em; text-align: left">{{ gloss }}</div>
+            <div style="opacity:60%; margin-bottom:.25em; font-size: 1.2rem; display: grid" class="md-headline"  v-for='(sense, index) in sense' :key='index'>
+                <div style="display: flex; flex-wrap: wrap">
+                    <div style="margin-left:.25em; text-align: left;" v-for="(pos, index) in sense.pos" :key='index'>
+                        <PosTag :text='pos' />
+                    </div>
+                </div>
+                <div style="display: flex; flex-wrap: wrap; text-align: left">
+                    {{ getGloss(sense) }}
+                </div>
             </div>
 
             <div style="margin-top:1em" v-if='(keb.length > 1)'>
@@ -83,7 +85,7 @@
             <md-button style="margin-top:1em; float: right;" class="to-deck-btn md-raised md-primary" v-on:click="atAddDialog = true">Add card to deck</md-button>
         
             <div v-if="searchPopup"
-            class="search-popup"
+            class="search-popup md-elevation-3"
             >
                 <div style="width: 100%">
                     <md-field style="width: 80%; margin-left: auto; margin-right: auto">
@@ -92,10 +94,23 @@
                         </form>
                     </md-field>
                     <div class="search-results" v-if="searchResults">
-                        <div v-for="entry of searchResults" :key='entry.id' style="display: grid; grid-template-columns: 1fr 1fr 2fr 1fr; align-items: center; margin: .5em 0emq">
+                        <div v-for="entry of searchResults"
+                            v-on:click="openSearchResult(entry.id)"
+                            :key='entry.id'
+                            class="search-result"
+                            >
                             <div v-html='entry.reading' style="font-size: 1.6em" />
-                            <div>{{ entry["r_ele"][0]["reb"][0] }}</div>
-                            <div>{{ entry.gloss[0].join(", ") }}</div>
+                            <div>{{ entry["r_ele"][0]["reb"] }}</div>
+                            <div>
+                                <div v-for="(sense, senseKey) of entry.sense" :key='senseKey'>
+                                    <div style='display: flex;'>
+                                        <div v-for="(pos, posIndex) of sense.pos" :key='posIndex'>
+                                            <PosTag :text='pos' />
+                                        </div>
+                                    </div>
+                                    <div style="text-align: left">{{ sense.gloss.join(", ") }}</div>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -113,13 +128,14 @@ import axios from 'axios'
 import { mapActions, mapState, mapGetters, mapMutations } from 'vuex';
 import Sentence from './ExampleSentence.vue'
 import Mixins from '../mixins/Mixins'
+import PosTag from './BasicComponents/PosTag.vue'
 
     export default {
         props: {
         },
                
         components: {
-            Sentence
+            Sentence, PosTag
         },
 
         metaInfo() {
@@ -176,25 +192,15 @@ import Mixins from '../mixins/Mixins'
             },
             isKanjiKnown: function() {
                 let id = this.entry.id
-                console.log(this.$store.state.user.knownKanjiIds)
                 return id in this.$store.state.user.knownKanjiIds;
             },
             // Gloss is an array containing 1 or more definitions for each entry
-            gloss: function () {
-                let tmpArr = [];
-                for (var gloss of this.entry.gloss) {
-                    let msg = "";
-                    for (let i = 0; i < gloss.length; i++) {
-                        msg += gloss[i] + ((i < gloss.length - 1) ? '; ' : '');
-                    }
-                    tmpArr.push(msg);
-                }
-                return tmpArr
+            sense: function () {
+                return this.entry.sense
             },
-
             // The reading of the entry without any Kanji
             hiragana: function () {
-                return this.entry["r_ele"][0]["reb"][0]
+                return this.entry["r_ele"][0]["reb"]
             },
 
             // The reading of the entry with Kanji (If no Kanji is present, k_ele is equivalent to this.hiragana)
@@ -228,17 +234,28 @@ import Mixins from '../mixins/Mixins'
             openSearch() {
                 this.searchPopup = !this.searchPopup;
             },
+            openSearchResult(id) {
+                this.openSearch()
+                this.$store.dispatch('dictionary/LOOKUP', { ids: [id] })
+            },
+            getGloss(sense) {
+                let msg = '';
+                for (let i = 0; i < sense.gloss.length; i++) {
+                    msg += sense.gloss[i] + ( i < sense.gloss.length - 1 ? '; ' : '' )
+                }
+                return msg
+            },
             // Returns the reading of the current entry, with or without Kanji
             getReadingA() {
-                if (!(this.entry.k_ele) || ('ke_inf' in this.entry['k_ele'][0] && this.entry['k_ele'][0]['ke_inf'][0] == '&oK;')) {    // If entry reading contains no kanji
-                    this.reading = this.entry["r_ele"][0]["reb"][0];  
-                    this.readingWithoutFurigana = this.entry["r_ele"][0]["reb"][0];
+                if (!(this.entry.k_ele) || ('ke_inf' in this.entry['k_ele'] && this.entry['k_ele'][0]['ke_inf'][0] == 'oK')) {    // If entry reading contains no kanji
+                    this.reading = this.entry["r_ele"][0]["reb"];  
+                    this.readingWithoutFurigana = this.entry["r_ele"][0]["reb"];
                 }
                 else {
                     try {
-                        this.$store.dispatch('analyzer/addFurigana', this.entry["k_ele"][0]["keb"][0]).then((result => {
+                        this.$store.dispatch('analyzer/addFurigana', this.entry["k_ele"][0]["keb"]).then((result => {
                             this.reading = result
-                            this.readingWithoutFurigana = this.entry["k_ele"][0]["keb"][0]
+                            this.readingWithoutFurigana = this.entry["k_ele"][0]["keb"]
                         }))
                     }
                     catch (exception) {
@@ -323,6 +340,10 @@ import Mixins from '../mixins/Mixins'
                 }
             },
             async searchForWord(searchTerm) {
+                if (searchTerm == '') {
+                    this.searchResults = []
+                    return
+                }
                 let results = this.lookupWord(searchTerm)
                 let words = [];
                 for (const word of results) {
@@ -365,12 +386,12 @@ import Mixins from '../mixins/Mixins'
             entry: function (newEntry) {
                 this.exampleSentences = []
                 if (newEntry.k_ele && newEntry.k_ele.length != 0) {
-                    this.getSentenceIDs(newEntry.k_ele[0].keb[0])
+                    this.getSentenceIDs(newEntry.k_ele[0].keb)
                 }
                 else {
-                    this.getSentenceIDs(newEntry.r_ele[0].reb[0])
+                    this.getSentenceIDs(newEntry.r_ele[0].reb)
                 }
-                    this.getReading();
+                    this.getReadingA();
             },
         }
     }
@@ -437,10 +458,23 @@ import Mixins from '../mixins/Mixins'
         height: 80%;
         overflow: auto;
         width: 100%;
-        background-color: red;
+        background-color: lightblue;
         left: .0px;
         top: 56px;
         z-index: 5;
         display: flex;
+
+    }
+
+    .search-result{
+        display: grid;
+        grid-template-columns: 1fr 1fr 2fr 1fr;
+        align-items: center;
+        cursor: pointer;
+        padding: .5em 0;
+    }
+
+    .search-result:hover{
+        background-color: white;
     }
 </style>

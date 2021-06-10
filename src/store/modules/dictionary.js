@@ -52,9 +52,9 @@ const state = () => ({
       if (state.pages.tail.head) {
         let entry = state.pages.tail.head.value[0]
         if (!(entry.k_ele))    // If entry reading contains no kanji
-            return entry["r_ele"][0]["reb"][0];  
+            return entry["r_ele"][0]["reb"];  
         else
-                return entry["k_ele"][0]["keb"][0];
+                return entry["k_ele"][0]["keb"];
       }
       else
         return ''

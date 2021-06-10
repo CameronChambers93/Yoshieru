@@ -132,7 +132,7 @@
 import { mapActions, mapState } from "vuex";
 import Dictionary from './components/Dictionary.vue'
 import Audio from './components/Audio.vue'
-import Flashcards from './components/Flashcards.vue'
+import Flashcards from './components/FlashCards.vue'
 import EasyNews from './components/EasyNews.vue'
 import YouTube from './components/YouTube.vue'
 
