@@ -65,32 +65,16 @@ const state = () => ({
   // actions
   const actions = {
       async INIT({ commit }) {
-        let zippedDict = {};
-        let unzippedDict = null;
-        if (localStorage.getItem('JMdict_e.json.gz2') == null) {
-          let result = await axios.get(`http://ec2-100-25-211-104.compute-1.amazonaws.com:5000/JMdict_e.json.gz`, {responseType: 'arraybuffer' })
-          zippedDict = result.data
-          localStorage.setItem('JMdict_e.json.gz', zippedDict)
-          unzippedDict = JSON.parse(await zlib.gunzipSync(new Buffer(zippedDict)))
-        }
-        else {
-          zippedDict = localStorage.getItem('JMdict_e.json.gz')
-          try {
-            unzippedDict = JSON.parse(await zlib.gunzipSync(new Buffer(zippedDict)))
-          } catch {
-            let result = await axios.get(`http://ec2-100-25-211-104.compute-1.amazonaws.com:5000/JMdict_e.json.gz`, {responseType: 'arraybuffer'})
-            zippedDict = result.data
-            localStorage.setItem('JMdict_e.json.gz', zippedDict)
-            unzippedDict = JSON.parse(await zlib.gunzipSync(new Buffer(zippedDict)))
-          }
-        }
-        console.log(unzippedDict)
         return new Promise((resolve) => {
-          let [textTrie, idTrie] = tries(unzippedDict)
-          let tmp = ["1562350"]
-          commit('init_define', { ids: tmp, textTrie: textTrie, idTrie: idTrie })
-          //commit('define',  {ids: tmp} )
-          resolve();
+          axios(`http://ec2-100-25-211-104.compute-1.amazonaws.com:5000/api/getJMDict`).then(zipped => {
+            zlib.Unzip(zipped.data.message, (unzipped) => {
+              let [textTrie, idTrie] = tries(unzipped)
+              let tmp = ["1562350"]
+              commit('init_define', { ids: tmp, textTrie: textTrie, idTrie: idTrie })
+              //commit('define',  {ids: tmp} )
+              resolve();
+            })
+          })
         })
       },
       LOOKUP({ commit }, ids) {
