@@ -25,8 +25,11 @@ export default {
         let tokens = tokenizer.tokenize(textToAnalyze);
         for (let i = 0; i < tokens.length; i++) {
             let text = tokens[i]['surface_form'];  // The 'surface_form' option passed here signifies the original form used
+            
             let tag = this.getPosTag(tokens[i])
             let ids = this.lookupWord(tokens[i]['basic_form'], tag);
+            if (ids.length == 0)
+                ids = this.lookupWord(tokens[i]['basic_form']);
             let newToken = { index: i , text, furigana: '', ids: ids};  // index is assigned here to keep the word order of the transcription
             tokenList.push(newToken);
         }

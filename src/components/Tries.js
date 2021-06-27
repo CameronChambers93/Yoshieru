@@ -58,6 +58,7 @@ class TextTrie{
         let ids = []
         let nodes = []
         while (node) {
+            Object.values(node.values).forEach(f => {f.forEach(g => {if (ids.indexOf(g) == -1) ids.push(g)})})
             Object.values(node.children).forEach(e => nodes.push(e))
             for (const pos of Object.values(node.values)) {
                 for (const id of pos) {
